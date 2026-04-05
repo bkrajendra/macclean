@@ -290,7 +290,7 @@
           input.addEventListener("change", () => {
             if (input.checked) state.selected.add(item.path);
             else state.selected.delete(item.path);
-            metrics();
+            render();
           });
 
           const content = document.createElement("div");
