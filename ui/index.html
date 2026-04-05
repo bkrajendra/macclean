@@ -1,96 +1,464 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Mac Cleanup</title>
-  <style>
-    body { font-family: system-ui; background:#0f172a; color:#e2e8f0; padding:20px;}
-    button { margin:5px; padding:8px 12px; border:none; border-radius:6px;}
-    .primary { background:#2563eb; color:white;}
-    .danger { background:#dc2626; color:white;}
-    .card { background:#1e293b; margin:6px 0; padding:8px; border-radius:6px;}
-    .project { margin-top:20px; font-weight:bold;}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MacClean</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <main class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <header class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight text-slate-900">MacClean</h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Scan project junk and reclaim storage safely from <span class="font-medium">~/projects</span>.
+          </p>
+        </div>
+        <div class="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
+          <button id="scanBtn" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+            Start Scan
+          </button>
+          <button id="deleteBtn" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60" disabled>
+            Delete Selected
+          </button>
+        </div>
+      </div>
 
-<h2>Mac Cleanup</h2>
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Mode</span>
+          <select id="mode" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm outline-none ring-blue-400 focus:ring">
+            <option value="safe">Safe (recommended)</option>
+            <option value="aggressive">Aggressive</option>
+          </select>
+        </label>
 
-<select id="mode">
-  <option value="safe">Safe</option>
-  <option value="aggressive">Aggressive</option>
-</select>
+        <label class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Search</span>
+          <input id="searchInput" type="text" placeholder="Path or project" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm outline-none ring-blue-400 focus:ring">
+        </label>
 
-<button class="primary" onclick="startScan()">Scan</button>
-<button class="danger" onclick="deleteSelected()">Delete</button>
+        <label class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Category</span>
+          <select id="categoryFilter" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm outline-none ring-blue-400 focus:ring">
+            <option value="all">All categories</option>
+          </select>
+        </label>
 
-<h3 id="total"></h3>
-<div id="output"></div>
+        <label class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Sort</span>
+          <select id="sortBy" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm outline-none ring-blue-400 focus:ring">
+            <option value="size_desc">Largest first</option>
+            <option value="size_asc">Smallest first</option>
+            <option value="path_asc">Path A-Z</option>
+            <option value="path_desc">Path Z-A</option>
+          </select>
+        </label>
+      </div>
 
-<script>
-let items = []
-let groups = {}
+      <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+        <button id="selectVisibleBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-100">Select visible</button>
+        <button id="clearSelectionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-100">Clear selection</button>
+        <span id="statusPill" class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">Idle</span>
+      </div>
+    </header>
 
-function startScan() {
-  items = []
-  groups = {}
-  document.getElementById("output").innerHTML = ""
+    <section class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-wide text-slate-500">Detected items</p>
+        <p id="detectedCount" class="mt-1 text-2xl font-semibold text-slate-900">0</p>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-wide text-slate-500">Selected items</p>
+        <p id="selectedCount" class="mt-1 text-2xl font-semibold text-slate-900">0</p>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-wide text-slate-500">Detected reclaimable</p>
+        <p id="detectedSize" class="mt-1 text-2xl font-semibold text-slate-900">0 B</p>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-wide text-slate-500">Selected reclaimable</p>
+        <p id="selectedSize" class="mt-1 text-2xl font-semibold text-slate-900">0 B</p>
+      </article>
+    </section>
 
-  const mode = document.getElementById("mode").value
-  const evt = new EventSource(`/stream?mode=${mode}`)
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 px-5 py-4">
+        <h2 class="text-lg font-semibold text-slate-900">Cleanup Candidates</h2>
+        <p class="text-sm text-slate-600">Grouped by project root. Expand cards and uncheck anything you want to keep.</p>
+      </div>
+      <div id="output" class="max-h-[56vh] overflow-auto p-4"></div>
+      <div id="emptyState" class="hidden px-6 py-10 text-center text-sm text-slate-500">
+        No matching cleanup items. Run a scan or change filters.
+      </div>
+    </section>
 
-  evt.onmessage = (e) => {
-    const data = JSON.parse(e.data)
+    <p id="message" class="mt-4 text-sm text-slate-600"></p>
+  </main>
 
-    if (data.type === "item") {
-      items.push(data)
+  <script>
+    const state = {
+      items: [],
+      selected: new Set(),
+      mode: "safe",
+      sortBy: "size_desc",
+      category: "all",
+      query: "",
+      scanning: false,
+      deleting: false,
+      source: null
+    };
 
-      if (!groups[data.project]) groups[data.project] = []
-      groups[data.project].push(data)
+    const el = {
+      mode: document.getElementById("mode"),
+      searchInput: document.getElementById("searchInput"),
+      categoryFilter: document.getElementById("categoryFilter"),
+      sortBy: document.getElementById("sortBy"),
+      scanBtn: document.getElementById("scanBtn"),
+      deleteBtn: document.getElementById("deleteBtn"),
+      selectVisibleBtn: document.getElementById("selectVisibleBtn"),
+      clearSelectionBtn: document.getElementById("clearSelectionBtn"),
+      statusPill: document.getElementById("statusPill"),
+      detectedCount: document.getElementById("detectedCount"),
+      selectedCount: document.getElementById("selectedCount"),
+      detectedSize: document.getElementById("detectedSize"),
+      selectedSize: document.getElementById("selectedSize"),
+      output: document.getElementById("output"),
+      emptyState: document.getElementById("emptyState"),
+      message: document.getElementById("message")
+    };
 
-      render()
+    function formatBytes(bytes) {
+      let value = Number(bytes) || 0;
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      let idx = 0;
+      while (value >= 1024 && idx < units.length - 1) {
+        value /= 1024;
+        idx += 1;
+      }
+      return `${value.toFixed(1)} ${units[idx]}`;
     }
 
-    if (data.type === "done") {
-      document.getElementById("total").innerText =
-        "Total: " + data.total
-      evt.close()
+    function setStatus(text, tone) {
+      el.statusPill.textContent = text;
+      const tones = {
+        neutral: "border-slate-200 bg-slate-100 text-slate-700",
+        active: "border-blue-200 bg-blue-50 text-blue-700",
+        success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+        warning: "border-amber-200 bg-amber-50 text-amber-700"
+      };
+      const className = tones[tone] || tones.neutral;
+      el.statusPill.className = `rounded-full border px-3 py-1 text-xs font-medium ${className}`;
     }
-  }
-}
 
-function render() {
-  const container = document.getElementById("output")
-  container.innerHTML = ""
+    function setMessage(text) {
+      el.message.textContent = text || "";
+    }
 
-  Object.keys(groups).forEach(project => {
-    container.innerHTML += `<div class="project">${project}</div>`
+    function closeSource() {
+      if (state.source) {
+        state.source.close();
+        state.source = null;
+      }
+    }
 
-    groups[project]
-      .sort((a,b) => b.size - a.size)
-      .forEach((i, idx) => {
-        container.innerHTML += `
-          <div class="card">
-            <input type="checkbox" checked value="${i.path}">
-            <b>${i.human}</b>
-            <div>${i.path}</div>
-          </div>`
-      })
-  })
-}
+    function filteredItems() {
+      const query = state.query.trim().toLowerCase();
+      return state.items
+        .filter((item) => (state.category === "all" ? true : item.category === state.category))
+        .filter((item) => {
+          if (!query) return true;
+          return (
+            item.path.toLowerCase().includes(query) ||
+            item.project.toLowerCase().includes(query) ||
+            item.label.toLowerCase().includes(query)
+          );
+        })
+        .sort((a, b) => {
+          switch (state.sortBy) {
+            case "size_asc": return a.size - b.size;
+            case "path_asc": return a.path.localeCompare(b.path);
+            case "path_desc": return b.path.localeCompare(a.path);
+            default: return b.size - a.size;
+          }
+        });
+    }
 
-function deleteSelected() {
-  const selected = Array.from(document.querySelectorAll("input:checked"))
-    .map(i => i.value)
+    function groupedItems(list) {
+      const grouped = new Map();
+      for (const item of list) {
+        if (!grouped.has(item.project)) grouped.set(item.project, []);
+        grouped.get(item.project).push(item);
+      }
+      return grouped;
+    }
 
-  fetch('/delete', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({paths: selected})
-  })
+    function updateCategoryFilter() {
+      const previous = state.category;
+      const categories = [...new Set(state.items.map((i) => i.category))].sort();
+      el.categoryFilter.innerHTML = "";
 
-  alert("Deleted")
-}
-</script>
+      const all = document.createElement("option");
+      all.value = "all";
+      all.textContent = "All categories";
+      el.categoryFilter.appendChild(all);
 
+      for (const category of categories) {
+        const option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        el.categoryFilter.appendChild(option);
+      }
+
+      state.category = categories.includes(previous) || previous === "all" ? previous : "all";
+      el.categoryFilter.value = state.category;
+    }
+
+    function metrics() {
+      const visible = filteredItems();
+      const selectedVisible = visible.filter((item) => state.selected.has(item.path));
+      const totalDetectedSize = state.items.reduce((acc, item) => acc + item.size, 0);
+      const selectedSize = state.items
+        .filter((item) => state.selected.has(item.path))
+        .reduce((acc, item) => acc + item.size, 0);
+
+      el.detectedCount.textContent = String(state.items.length);
+      el.selectedCount.textContent = String(state.selected.size);
+      el.detectedSize.textContent = formatBytes(totalDetectedSize);
+      el.selectedSize.textContent = formatBytes(selectedSize);
+      el.deleteBtn.disabled = state.selected.size === 0 || state.scanning || state.deleting;
+      el.selectVisibleBtn.disabled = visible.length === 0 || state.scanning || state.deleting;
+      el.clearSelectionBtn.disabled = state.selected.size === 0 || state.scanning || state.deleting;
+
+      return { visible, selectedVisible };
+    }
+
+    function render() {
+      const { visible } = metrics();
+      const groups = groupedItems(visible);
+      el.output.innerHTML = "";
+      el.emptyState.classList.toggle("hidden", visible.length !== 0);
+
+      for (const [project, projectItems] of groups.entries()) {
+        const groupWrap = document.createElement("details");
+        groupWrap.open = true;
+        groupWrap.className = "mb-3 overflow-hidden rounded-xl border border-slate-200";
+
+        const header = document.createElement("summary");
+        header.className = "cursor-pointer list-none bg-slate-50 px-4 py-3";
+        const projectSize = projectItems.reduce((acc, item) => acc + item.size, 0);
+        const selectedInProject = projectItems.filter((item) => state.selected.has(item.path)).length;
+        header.innerHTML = `
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold text-slate-900">${project}</p>
+              <p class="text-xs text-slate-500">${projectItems.length} items · ${formatBytes(projectSize)}</p>
+            </div>
+            <button type="button" class="project-toggle rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+              ${selectedInProject === projectItems.length ? "Unselect project" : "Select project"}
+            </button>
+          </div>
+        `;
+
+        const projectToggle = header.querySelector(".project-toggle");
+        projectToggle.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const selectAll = selectedInProject !== projectItems.length;
+          for (const item of projectItems) {
+            if (selectAll) state.selected.add(item.path);
+            else state.selected.delete(item.path);
+          }
+          render();
+        });
+
+        groupWrap.appendChild(header);
+
+        const list = document.createElement("div");
+        list.className = "divide-y divide-slate-100";
+
+        for (const item of projectItems) {
+          const row = document.createElement("label");
+          row.className = "flex cursor-pointer items-start gap-3 bg-white px-4 py-3 hover:bg-slate-50";
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = state.selected.has(item.path);
+          input.className = "mt-1 size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500";
+          input.addEventListener("change", () => {
+            if (input.checked) state.selected.add(item.path);
+            else state.selected.delete(item.path);
+            render();
+          });
+
+          const content = document.createElement("div");
+          content.className = "min-w-0 flex-1";
+
+          const title = document.createElement("p");
+          title.className = "text-sm font-medium text-slate-900";
+          title.textContent = `${item.label} · ${formatBytes(item.size)}`;
+
+          const meta = document.createElement("p");
+          meta.className = "text-xs text-slate-500";
+          meta.textContent = `${item.category} · ${item.path}`;
+
+          content.appendChild(title);
+          content.appendChild(meta);
+          row.appendChild(input);
+          row.appendChild(content);
+          list.appendChild(row);
+        }
+
+        groupWrap.appendChild(list);
+        el.output.appendChild(groupWrap);
+      }
+    }
+
+    function setBusyState() {
+      const label = state.scanning ? "Scanning..." : "Start Scan";
+      el.scanBtn.textContent = label;
+      el.scanBtn.disabled = state.scanning || state.deleting;
+      el.mode.disabled = state.scanning || state.deleting;
+      el.searchInput.disabled = state.deleting;
+      el.categoryFilter.disabled = state.deleting;
+      el.sortBy.disabled = state.deleting;
+      metrics();
+    }
+
+    function startScan() {
+      closeSource();
+      state.scanning = true;
+      state.items = [];
+      state.selected.clear();
+      state.mode = el.mode.value;
+      updateCategoryFilter();
+      render();
+      setBusyState();
+      setStatus("Scanning in progress", "active");
+      setMessage("");
+
+      const source = new EventSource(`/stream?mode=${encodeURIComponent(state.mode)}`);
+      state.source = source;
+
+      source.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "item") {
+          state.items.push(data);
+          state.selected.add(data.path);
+          updateCategoryFilter();
+          render();
+          return;
+        }
+        if (data.type === "error") {
+          setStatus("Scan warning", "warning");
+          setMessage(data.message);
+          return;
+        }
+        if (data.type === "done") {
+          state.scanning = false;
+          setBusyState();
+          setStatus("Scan complete", "success");
+          setMessage(`Found ${data.count || 0} cleanup candidates totalling ${data.total || "0 B"}.`);
+          closeSource();
+        }
+      };
+
+      source.onerror = () => {
+        state.scanning = false;
+        setBusyState();
+        setStatus("Connection closed", "warning");
+        if (!state.items.length) {
+          setMessage("Scan stream ended unexpectedly. Retry scan.");
+        }
+        closeSource();
+      };
+    }
+
+    async function deleteSelected() {
+      if (!state.selected.size || state.deleting) return;
+
+      const selectedItems = state.items.filter((item) => state.selected.has(item.path));
+      const totalBytes = selectedItems.reduce((acc, item) => acc + item.size, 0);
+      const confirmed = window.confirm(
+        `Delete ${selectedItems.length} selected item(s) and free around ${formatBytes(totalBytes)}?`
+      );
+      if (!confirmed) return;
+
+      state.deleting = true;
+      setBusyState();
+      setStatus("Deleting selected items", "active");
+      setMessage("");
+
+      try {
+        const response = await fetch("/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paths: [...state.selected] })
+        });
+        if (!response.ok) {
+          throw new Error(`Delete failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const deletedPaths = new Set(selectedItems.map((item) => item.path));
+        state.items = state.items.filter((item) => !deletedPaths.has(item.path));
+        state.selected.clear();
+        updateCategoryFilter();
+        render();
+        setStatus("Delete complete", "success");
+        setMessage(
+          `Deleted ${result.deleted_count || 0} item(s), reclaimed ${result.deleted_human || "0 B"}${(result.skipped || []).length ? `, skipped ${(result.skipped || []).length}.` : "."}`
+        );
+      } catch (error) {
+        setStatus("Delete failed", "warning");
+        setMessage(error.message);
+      } finally {
+        state.deleting = false;
+        setBusyState();
+      }
+    }
+
+    function selectVisible() {
+      const visible = filteredItems();
+      for (const item of visible) {
+        state.selected.add(item.path);
+      }
+      render();
+    }
+
+    function clearSelection() {
+      state.selected.clear();
+      metrics();
+      render();
+    }
+
+    el.scanBtn.addEventListener("click", startScan);
+    el.deleteBtn.addEventListener("click", deleteSelected);
+    el.selectVisibleBtn.addEventListener("click", selectVisible);
+    el.clearSelectionBtn.addEventListener("click", clearSelection);
+
+    el.searchInput.addEventListener("input", () => {
+      state.query = el.searchInput.value;
+      render();
+    });
+
+    el.categoryFilter.addEventListener("change", () => {
+      state.category = el.categoryFilter.value;
+      render();
+    });
+
+    el.sortBy.addEventListener("change", () => {
+      state.sortBy = el.sortBy.value;
+      render();
+    });
+
+    window.addEventListener("beforeunload", closeSource);
+
+    setStatus("Idle", "neutral");
+    updateCategoryFilter();
+    render();
+  </script>
 </body>
 </html>
