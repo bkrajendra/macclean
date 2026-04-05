@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mac Cleanup</title>
+  <style>
+    body { font-family: system-ui; background:#0f172a; color:#e2e8f0; padding:20px;}
+    button { margin:5px; padding:8px 12px; border:none; border-radius:6px;}
+    .primary { background:#2563eb; color:white;}
+    .danger { background:#dc2626; color:white;}
+    .card { background:#1e293b; margin:6px 0; padding:8px; border-radius:6px;}
+    .project { margin-top:20px; font-weight:bold;}
+  </style>
+</head>
+<body>
+
+<h2>Mac Cleanup</h2>
+
+<select id="mode">
+  <option value="safe">Safe</option>
+  <option value="aggressive">Aggressive</option>
+</select>
+
+<button class="primary" onclick="startScan()">Scan</button>
+<button class="danger" onclick="deleteSelected()">Delete</button>
+
+<h3 id="total"></h3>
+<div id="output"></div>
+
+<script>
+let items = []
+let groups = {}
+
+function startScan() {
+  items = []
+  groups = {}
+  document.getElementById("output").innerHTML = ""
+
+  const mode = document.getElementById("mode").value
+  const evt = new EventSource(`/stream?mode=${mode}`)
+
+  evt.onmessage = (e) => {
+    const data = JSON.parse(e.data)
+
+    if (data.type === "item") {
+      items.push(data)
+
+      if (!groups[data.project]) groups[data.project] = []
+      groups[data.project].push(data)
+
+      render()
+    }
+
+    if (data.type === "done") {
+      document.getElementById("total").innerText =
+        "Total: " + data.total
+      evt.close()
+    }
+  }
+}
+
+function render() {
+  const container = document.getElementById("output")
+  container.innerHTML = ""
+
+  Object.keys(groups).forEach(project => {
+    container.innerHTML += `<div class="project">${project}</div>`
+
+    groups[project]
+      .sort((a,b) => b.size - a.size)
+      .forEach((i, idx) => {
+        container.innerHTML += `
+          <div class="card">
+            <input type="checkbox" checked value="${i.path}">
+            <b>${i.human}</b>
+            <div>${i.path}</div>
+          </div>`
+      })
+  })
+}
+
+function deleteSelected() {
+  const selected = Array.from(document.querySelectorAll("input:checked"))
+    .map(i => i.value)
+
+  fetch('/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({paths: selected})
+  })
+
+  alert("Deleted")
+}
+</script>
+
+</body>
+</html>
