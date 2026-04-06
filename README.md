@@ -1,14 +1,45 @@
 # MacClean
 
-MacClean is a lightweight local web app for reclaiming disk space on macOS developer machines.
-It scans `~/projects` for removable build artifacts and caches, then lets you delete selected items from a browser UI.
+MacClean is a local macOS cleanup web app that scans safe-to-remove caches and build artifacts and lets you delete selected items from a browser UI.
 
 ## What it cleans
 
-- Dependency folders like `node_modules`
-- Build outputs like `build`, `dist`, `target`, `out` (aggressive mode)
-- Language and tool caches like `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.gradle`, `.cache`
-- macOS metadata files like `.DS_Store`
+### Recursive pattern cleanup (safe + aggressive)
+
+- `node_modules`
+- `target` (Maven/Rust target folders)
+- `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`
+- `.next`, `.nuxt`, `.svelte-kit`, `.parcel-cache`, `.angular`
+- `.cache`, `.gradle`
+- `.DS_Store`
+
+Aggressive mode also includes:
+
+- `build`, `dist`, `out`, `coverage`, `.tox`, `.terraform`
+- `*.pyc`
+
+### Exact cache locations (safe + aggressive)
+
+User-level:
+
+- `~/Library/Caches/*`
+- `~/Library/Logs/*`
+- `~/Library/Developer/Xcode/DerivedData`
+- `~/.Trash/*`
+- `~/.npm/_cacache`
+- `~/.pnpm-store`
+- `~/.yarn/cache`
+- `~/.cache/pip`
+- `~/.m2/repository`
+
+System-level (Full Mac scope):
+
+- `/Library/Caches/*`
+- `/Library/Logs/*`
+- `/opt/homebrew/var/cache/*`
+- `/usr/local/var/cache/*`
+
+Browser cache coverage comes from user app caches under `~/Library/Caches/*` (e.g., Chrome/Firefox/Safari related cache folders).
 
 ## Prerequisites (Mac)
 
@@ -16,49 +47,52 @@ It scans `~/projects` for removable build artifacts and caches, then lets you de
 - Python 3.12+
 - [`uv`](https://docs.astral.sh/uv/) installed
 
-Install `uv` on macOS:
+Install `uv`:
 
-- With Homebrew: `brew install uv`
-- Or with the official installer: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- Homebrew: `brew install uv`
+- Official installer: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ## Run on Mac
 
-1. Clone the repository:
+1. Clone and enter the project:
    - `git clone <your-repo-url>`
    - `cd macclean`
-
-2. Ensure the scan root exists:
-   - `mkdir -p ~/projects`
-
-3. Start the app:
+2. Start the app:
    - `uv run python main.py`
-
-4. Open in browser:
+3. Open:
    - `http://localhost:8080`
 
-## Quick demo data (optional)
+Optional flags:
 
-If your `~/projects` directory does not yet contain build artifacts, create sample folders:
+- `uv run python main.py --host 0.0.0.0 --port 8080`
+- `uv run python main.py --no-browser`
 
-- `mkdir -p ~/projects/sample/node_modules`
-- `mkdir -p ~/projects/sample/__pycache__`
-- `mkdir -p ~/projects/sample/build`
-- `touch ~/projects/sample/.DS_Store`
+## Run with administrator privileges (recommended for Full Mac scans)
 
-Run a scan again in the UI and you should see cleanup candidates.
+For deeper system coverage, start with `sudo`:
+
+- `sudo -E uv run python main.py --host localhost --port 8080`
+
+Notes:
+
+- Full Mac scan can still run without admin, but protected folders may be skipped.
+- The UI shows permission-denied counts and prints a suggested elevated launch command.
 
 ## How to use
 
-1. Choose a mode:
-   - **Safe**: conservative targets (recommended for regular use)
-   - **Aggressive**: includes additional build artifacts and compiled files
-2. Click **Start Scan**
-3. Review items grouped by project
-4. Optionally filter/search/sort and adjust checkboxes
-5. Click **Delete Selected** and confirm
+1. Choose **Mode**:
+   - **Safe**: conservative cache cleanup.
+   - **Aggressive**: includes extra build/compiled artifacts.
+2. Choose **Scope**:
+   - **Projects**: focus on `~/projects`.
+   - **User home**: scan your home directory + user cache locations.
+   - **Full Mac**: scan user homes + known system cache locations.
+3. Click **Start Scan**.
+4. Review grouped candidates, filter/search/sort, and adjust selections.
+5. Click **Delete Selected** and confirm.
 
-## Notes
+## Safety model
 
-- The app only deletes paths inside `~/projects`.
-- It is a local tool; no cloud service is required.
-- If the browser does not auto-open, manually visit `http://localhost:8080`.
+- Deletes are only allowed for items discovered in the most recent scan session.
+- Core protected paths are never deleted (e.g. `/`, `/Users`, `/System`, `/Applications`, `/Library`, home root itself).
+- If scan session expires, deletion is blocked until you run a fresh scan.
