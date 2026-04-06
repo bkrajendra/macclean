@@ -456,6 +456,176 @@ def homes_for_scope(scope):
     return [HOME_ROOT]
 
 
+TARGET_RULES = [
+    {
+        "key": "node_modules",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Node modules",
+        "category": "Dependencies",
+    },
+    {
+        "key": "__pycache__",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Python bytecode cache",
+        "category": "Python",
+    },
+    {
+        "key": ".pytest_cache",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Pytest cache",
+        "category": "Python",
+    },
+    {
+        "key": ".mypy_cache",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Mypy cache",
+        "category": "Python",
+    },
+    {
+        "key": ".ruff_cache",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Ruff cache",
+        "category": "Python",
+    },
+    {
+        "key": ".next",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Next.js build cache",
+        "category": "Frontend",
+    },
+    {
+        "key": ".nuxt",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Nuxt build cache",
+        "category": "Frontend",
+    },
+    {
+        "key": ".svelte-kit",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "SvelteKit cache",
+        "category": "Frontend",
+    },
+    {
+        "key": ".parcel-cache",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Parcel cache",
+        "category": "Frontend",
+    },
+    {
+        "key": ".angular",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Angular cache",
+        "category": "Frontend",
+    },
+    {
+        "key": ".cache",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Generic cache folder",
+        "category": "Caches",
+    },
+    {
+        "key": ".gradle",
+        "kind": "dir",
+        "modes": {"safe", "aggressive"},
+        "label": "Gradle cache",
+        "category": "Build",
+    },
+    {
+        "key": "build",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Build output",
+        "category": "Build",
+    },
+    {
+        "key": "dist",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Distribution output",
+        "category": "Build",
+    },
+    {
+        "key": "out",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Compiled output",
+        "category": "Build",
+    },
+    {
+        "key": "target",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Rust/Java target output",
+        "category": "Build",
+    },
+    {
+        "key": "coverage",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Coverage report output",
+        "category": "Testing",
+    },
+    {
+        "key": ".tox",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Tox virtualenv cache",
+        "category": "Testing",
+    },
+    {
+        "key": ".terraform",
+        "kind": "dir",
+        "modes": {"aggressive"},
+        "label": "Terraform module cache",
+        "category": "Infrastructure",
+    },
+    {
+        "key": ".DS_Store",
+        "kind": "file_exact",
+        "modes": {"safe", "aggressive"},
+        "label": "macOS Finder metadata",
+        "category": "macOS",
+    },
+    {
+        "key": ".pyc",
+        "kind": "file_suffix",
+        "modes": {"aggressive"},
+        "label": "Python compiled file",
+        "category": "Python",
+    },
+]
+
+
+def rules_for_mode(mode):
+    active = [rule for rule in TARGET_RULES if mode in rule["modes"]]
+    return {
+        "dirs": {rule["key"]: rule for rule in active if rule["kind"] == "dir"},
+        "file_exact": {
+            rule["key"]: rule for rule in active if rule["kind"] == "file_exact"
+        },
+        "file_suffix": [rule for rule in active if rule["kind"] == "file_suffix"],
+    }
+
+
+def is_safe_path(path):
+    try:
+        root_real = os.path.realpath(SEARCH_ROOT)
+        path_real = os.path.realpath(path)
+        return os.path.commonpath([root_real, path_real]) == root_real
+    except ValueError:
+        return False
+
 def get_size(path):
     try:
         if os.path.isdir(path) and not os.path.islink(path):
