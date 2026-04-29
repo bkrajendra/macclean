@@ -2,6 +2,8 @@
 
 MacClean is a local macOS cleanup web app that scans safe-to-remove caches and build artifacts and lets you delete selected items from a browser UI.
 
+CAUTION: Ensure to validate before selecting artifacts to delete, most caches are harmeless to delete, but few functionalities might break which depends on some artifacts. You should be 100% aware of what you are deleting.
+
 ## What it cleans
 
 ### Recursive pattern cleanup (safe + aggressive)
@@ -55,7 +57,7 @@ Install `uv`:
 ## Run on Mac
 
 1. Clone and enter the project:
-   - `git clone <your-repo-url>`
+   - `git clone https://github.com/bkrajendra/macclean.git`
    - `cd macclean`
 2. Start the app:
    - `uv run python main.py`
