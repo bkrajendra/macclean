@@ -613,6 +613,7 @@ def scan_stream(handler, mode="safe", scope="projects"):
     scope = normalize_scope(scope)
     target_index = rules_for_mode(mode)
     scan_id = uuid.uuid4().hex
+    persist_scan_session(scan_id, set(), scope)
 
     total = 0
     count = 0
@@ -649,13 +650,16 @@ def scan_stream(handler, mode="safe", scope="projects"):
         total += size
         count += 1
         allowed_paths.add(real)
+        session = SCAN_SESSIONS.get(scan_id)
+        if session is not None:
+            session["paths"].add(real)
         send(
             {
                 "type": "item",
                 "path": path,
                 "size": size,
                 "human": human_size(size),
-                "project": path_group(path),
+                "group": path_group(path),
                 "category": category,
                 "label": label,
             }
@@ -666,6 +670,7 @@ def scan_stream(handler, mode="safe", scope="projects"):
             "type": "start",
             "mode": mode,
             "scope": scope,
+            "scan_id": scan_id,
             "is_admin": is_admin_user(),
             "roots": roots,
         }
@@ -676,6 +681,7 @@ def scan_stream(handler, mode="safe", scope="projects"):
             break
         emit_item(candidate["path"], candidate["label"], candidate["category"])
 
+    dirs_walked = 0
     for root in roots:
         if not client_connected or not os.path.isdir(root):
             continue
@@ -689,6 +695,10 @@ def scan_stream(handler, mode="safe", scope="projects"):
         for walk_root, dirs, files in os.walk(root, topdown=True, onerror=on_walk_error):
             if not client_connected:
                 break
+
+            dirs_walked += 1
+            if dirs_walked % 250 == 0:
+                send({"type": "progress", "scanned_dirs": dirs_walked, "current": walk_root})
 
             pruned_dirs = []
             for directory in dirs:
