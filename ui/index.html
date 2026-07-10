@@ -135,6 +135,27 @@
     .empty { padding: 2.5rem 1rem; text-align: center; color: var(--ink-soft); }
     .msg { margin-top: 1rem; font-size: .85rem; color: var(--ink-soft); padding: 0 .25rem; }
 
+    .scan-panel { display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+    .radar { position: relative; width: 92px; height: 92px; flex: 0 0 auto; }
+    .radar .ring, .radar .sweep, .radar .core { position: absolute; inset: 0; border-radius: 50%; }
+    .radar .ring { border: 2px solid rgba(99, 102, 241, .35); animation: radar-pulse 2.4s ease-out infinite; }
+    .radar .r2 { animation-delay: .8s; }
+    .radar .r3 { animation-delay: 1.6s; }
+    .radar .sweep {
+      background: conic-gradient(from 0deg, rgba(139, 92, 246, .45), rgba(34, 211, 238, .18) 30%, transparent 45%);
+      animation: radar-spin 1.8s linear infinite;
+      -webkit-mask: radial-gradient(circle, transparent 18%, #000 19%);
+      mask: radial-gradient(circle, transparent 18%, #000 19%);
+    }
+    .radar .core { inset: 38%; background: var(--grad); box-shadow: 0 0 18px rgba(139, 92, 246, .6); animation: core-pulse 1.2s ease-in-out infinite alternate; }
+    @keyframes radar-pulse { from { transform: scale(.35); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+    @keyframes radar-spin { to { transform: rotate(360deg); } }
+    @keyframes core-pulse { from { transform: scale(.85); } to { transform: scale(1.1); } }
+    .scan-info { min-width: 0; flex: 1; }
+    .scan-title { margin: 0; font: 700 1.1rem var(--font-display); }
+    .scan-stats { margin: .2rem 0; color: var(--ink-soft); }
+    .scan-stats span { font-family: var(--font-mono); font-weight: 700; color: var(--indigo); }
+
     .overlay {
       position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
       background: rgba(250, 250, 255, .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -192,7 +213,17 @@
       <div id="adminInfo" class="admin-note" hidden></div>
     </header>
 
-    <section id="scanPanel" class="card scan-panel" hidden></section>
+    <section id="scanPanel" class="card scan-panel" hidden>
+      <div class="radar" aria-hidden="true">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+        <span class="sweep"></span><span class="core"></span>
+      </div>
+      <div class="scan-info">
+        <p class="scan-title">Scanning your Mac…</p>
+        <p class="scan-stats"><span id="scanItems">0</span> items · <span id="scanSize">0 B</span> found</p>
+        <p id="scanPath" class="path">&nbsp;</p>
+      </div>
+    </section>
 
     <section class="stats">
       <article class="card stat"><p>Detected items</p><p id="detectedCount" class="stat-num">0</p></article>
@@ -225,7 +256,7 @@
       scanId: "", scanRoots: [], permissionsDenied: 0,
       isAdmin: false, adminHint: "", adminCommand: "",
       homeRoot: "", activeTab: "all",
-      scannedDirs: 0, currentDir: "",
+      scannedDirs: 0, currentDir: "", foundBytes: 0,
     };
 
     const el = {};
@@ -233,7 +264,8 @@
       "scanBtn", "stopBtn", "deleteBtn", "mode", "scope", "searchInput", "categoryFilter",
       "sortBy", "selectVisibleBtn", "clearSelectionBtn", "statusPill", "detectedCount",
       "selectedCount", "detectedSize", "selectedSize", "tabBar", "listPanel", "emptyState",
-      "message", "adminInfo", "scanPanel", "confirmModal", "celebration",
+      "message", "adminInfo", "scanPanel", "scanItems", "scanSize", "scanPath",
+      "confirmModal", "celebration",
     ]) el[id] = document.getElementById(id);
 
     const CHIP_COLORS = [
@@ -467,7 +499,8 @@
 
     function setBusyState() {
       const busy = state.scanning || state.deleting;
-      el.scanBtn.textContent = state.scanning ? "Scanning…" : "Start scan";
+      el.scanBtn.hidden = state.scanning;
+      el.stopBtn.hidden = !state.scanning;
       el.scanBtn.disabled = busy;
       el.mode.disabled = busy;
       el.scope.disabled = busy;
@@ -498,6 +531,19 @@
       }
     }
 
+    function showScanPanel() {
+      el.scanItems.textContent = "0";
+      el.scanSize.textContent = "0 B";
+      el.scanPath.textContent = " ";
+      el.scanPanel.hidden = false;
+      document.querySelector(".results").classList.add("dimmed");
+    }
+
+    function hideScanPanel() {
+      el.scanPanel.hidden = true;
+      document.querySelector(".results").classList.remove("dimmed");
+    }
+
     function startScan() {
       closeSource();
       state.scanning = true;
@@ -509,12 +555,14 @@
       state.adminHint = "";
       state.scannedDirs = 0;
       state.currentDir = "";
+      state.foundBytes = 0;
       state.activeTab = "all";
       state.mode = el.mode.value;
       state.scope = el.scope.value;
       updateCategoryFilter();
       render();
       setBusyState();
+      showScanPanel();
       setStatus("Scanning your Mac…", "active");
       setMessage("");
       updateAdminInfo();
@@ -536,6 +584,9 @@
         if (data.type === "item") {
           state.items.push(data);
           state.selected.add(data.path);
+          state.foundBytes += Number(data.size) || 0;
+          el.scanItems.textContent = String(state.items.length);
+          el.scanSize.textContent = formatBytes(state.foundBytes);
           updateCategoryFilter();
           scheduleRender();
           return;
@@ -543,6 +594,7 @@
         if (data.type === "progress") {
           state.scannedDirs = Number(data.scanned_dirs || 0);
           state.currentDir = data.current || "";
+          el.scanPath.textContent = prettyPath(state.currentDir);
           return;
         }
         if (data.type === "error") {
@@ -552,6 +604,7 @@
         }
         if (data.type === "done") {
           state.scanning = false;
+          hideScanPanel();
           setBusyState();
           state.permissionsDenied = Number(data.permissions_denied || 0);
           state.isAdmin = Boolean(data.is_admin);
@@ -569,6 +622,7 @@
 
       source.onerror = () => {
         state.scanning = false;
+        hideScanPanel();
         setBusyState();
         setStatus("Connection closed", "warn");
         if (!state.items.length) {
@@ -576,6 +630,17 @@
         }
         closeSource();
       };
+    }
+
+    function stopScan() {
+      if (!state.scanning) return;
+      closeSource();
+      state.scanning = false;
+      hideScanPanel();
+      setBusyState();
+      setStatus("Scan stopped — partial results kept", "warn");
+      setMessage(`Stopped after ${state.items.length} item(s). Everything found so far stays selectable and deletable.`);
+      render();
     }
 
     async function performDelete() {
@@ -648,6 +713,7 @@
     }
 
     el.scanBtn.addEventListener("click", startScan);
+    el.stopBtn.addEventListener("click", stopScan);
     el.deleteBtn.addEventListener("click", deleteSelected);
     el.selectVisibleBtn.addEventListener("click", selectVisible);
     el.clearSelectionBtn.addEventListener("click", clearSelection);
