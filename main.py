@@ -480,9 +480,12 @@ def path_group(path):
     normalized = os.path.realpath(path)
     parts = normalized.split(os.sep)
     if len(parts) > 2 and parts[1] in {"Users", "home"}:
-        return os.path.join(os.sep, parts[1], parts[2])
-    if len(parts) > 1:
-        return os.path.join(os.sep, parts[1])
+        home = os.sep + os.path.join(parts[1], parts[2])
+        if len(parts) > 3:
+            return os.path.join(home, parts[3])
+        return home
+    if len(parts) > 1 and parts[1]:
+        return os.sep + parts[1]
     return normalized
 
 
