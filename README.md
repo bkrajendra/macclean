@@ -89,9 +89,9 @@ Notes:
    - **Projects**: focus on `~/projects`.
    - **User home**: scan your home directory + user cache locations.
    - **Full Mac**: scan user homes + known system cache locations.
-3. Click **Start Scan**.
-4. Review grouped candidates, filter/search/sort, and adjust selections.
-5. Click **Delete Selected** and confirm.
+3. Click **Start scan**. While scanning, all controls are disabled except **Stop scan**, which keeps everything found so far selectable and deletable.
+4. Review candidates in the system-path tabs, filter/search/sort, and adjust selections.
+5. Click **Delete selected** and confirm. A summary shows how much space was reclaimed.
 
 ## Safety model
 

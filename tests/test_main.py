@@ -76,6 +76,26 @@ class ScanStreamTests(unittest.TestCase):
             self.assertEqual(done["type"], "done")
             self.assertEqual(done["scan_id"], start["scan_id"])
 
+    def test_progress_events_emitted_during_walk(self):
+        with tempfile.TemporaryDirectory() as projects, \
+                tempfile.TemporaryDirectory() as fake_home:
+            for i in range(300):
+                os.makedirs(os.path.join(projects, f"pkg{i}", "src"))
+            old_projects, old_home = main.PROJECTS_ROOT, main.HOME_ROOT
+            main.PROJECTS_ROOT, main.HOME_ROOT = projects, fake_home
+            try:
+                handler = types.SimpleNamespace(wfile=io.BytesIO())
+                main.scan_stream(handler, mode="safe", scope="projects")
+            finally:
+                main.PROJECTS_ROOT, main.HOME_ROOT = old_projects, old_home
+
+            events = parse_sse(handler.wfile.getvalue())
+            progress = [e for e in events if e["type"] == "progress"]
+            self.assertTrue(progress)
+            self.assertGreaterEqual(progress[0]["scanned_dirs"], 250)
+            self.assertTrue(progress[0]["current"].startswith(os.path.realpath(projects))
+                            or progress[0]["current"].startswith(projects))
+
 
 if __name__ == "__main__":
     unittest.main()
