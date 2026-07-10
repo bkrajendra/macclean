@@ -161,9 +161,24 @@
       background: rgba(250, 250, 255, .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
 
+    .dialog { max-width: 24rem; width: calc(100% - 2rem); padding: 1.75rem; text-align: center; background: #fff; }
+    .dialog h3 { margin: 0 0 .5rem; font: 700 1.25rem var(--font-display); }
+    .dialog p { margin: 0 0 1.25rem; color: var(--ink-soft); }
+    .dialog-actions { display: flex; gap: .75rem; justify-content: center; }
+    #confettiCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .celebrate { animation: pop-in .45s cubic-bezier(.2, 1.4, .4, 1); }
+    .celebrate-emoji { font-size: 2.5rem; margin: 0; }
+    .celebrate-amount {
+      margin: .25rem 0 0 !important; font: 800 3rem var(--font-display);
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .celebrate-sub { color: var(--ink-soft); }
+    @keyframes pop-in { from { transform: scale(.7); opacity: 0; } }
+
     @media (prefers-reduced-motion: reduce) {
       body::before, .radar * { animation: none !important; }
       .btn { transition: none; }
+      .celebrate { animation: none; }
     }
   </style>
 </head>
@@ -245,8 +260,27 @@
     <p id="message" class="msg"></p>
   </main>
 
-  <div id="confirmModal" class="overlay" hidden></div>
-  <div id="celebration" class="overlay" hidden></div>
+  <div id="confirmModal" class="overlay" hidden>
+    <div class="card dialog">
+      <h3 id="confirmTitle">Delete 0 items?</h3>
+      <p id="confirmBody">This frees about 0 B. Files are removed permanently, not moved to the Trash.</p>
+      <div class="dialog-actions">
+        <button id="confirmCancel" class="btn btn-ghost">Cancel</button>
+        <button id="confirmDelete" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="celebration" class="overlay" hidden>
+    <canvas id="confettiCanvas"></canvas>
+    <div class="card dialog celebrate">
+      <p class="celebrate-emoji">🎉</p>
+      <h3>All clean!</h3>
+      <p id="celebrateAmount" class="celebrate-amount">0 B</p>
+      <p id="celebrateSub" class="celebrate-sub">reclaimed across 0 items</p>
+      <button id="celebrateClose" class="btn btn-primary">Done</button>
+    </div>
+  </div>
 
   <script>
     const state = {
@@ -265,7 +299,8 @@
       "sortBy", "selectVisibleBtn", "clearSelectionBtn", "statusPill", "detectedCount",
       "selectedCount", "detectedSize", "selectedSize", "tabBar", "listPanel", "emptyState",
       "message", "adminInfo", "scanPanel", "scanItems", "scanSize", "scanPath",
-      "confirmModal", "celebration",
+      "confirmModal", "confirmTitle", "confirmBody", "confirmCancel", "confirmDelete",
+      "celebration", "celebrateAmount", "celebrateSub", "celebrateClose", "confettiCanvas",
     ]) el[id] = document.getElementById(id);
 
     const CHIP_COLORS = [
@@ -675,6 +710,7 @@
         setMessage(
           `Deleted ${result.deleted_count || 0} item(s), reclaimed ${result.deleted_human || "0 B"}${(result.skipped || []).length ? `, skipped ${(result.skipped || []).length}.` : "."}`
         );
+        celebrate(result.deleted_bytes || 0, result.deleted_count || 0);
       } catch (error) {
         setStatus("Delete failed", "warn");
         setMessage(error.message);
@@ -684,6 +720,20 @@
       }
     }
 
+    function openConfirm() {
+      const selectedItems = state.items.filter((item) => state.selected.has(item.path));
+      const totalBytes = selectedItems.reduce((acc, item) => acc + item.size, 0);
+      const noun = selectedItems.length === 1 ? "item" : "items";
+      el.confirmTitle.textContent = `Delete ${selectedItems.length} ${noun}?`;
+      el.confirmBody.textContent = `This frees about ${formatBytes(totalBytes)}. Files are removed permanently, not moved to the Trash.`;
+      el.confirmDelete.textContent = `Delete ${selectedItems.length} ${noun}`;
+      el.confirmModal.hidden = false;
+    }
+
+    function closeConfirm() {
+      el.confirmModal.hidden = true;
+    }
+
     function deleteSelected() {
       if (!state.selected.size || state.deleting) return;
       if (!state.scanId) {
@@ -691,13 +741,74 @@
         setMessage("Run a new scan before deleting so paths can be validated safely.");
         return;
       }
-      const selectedItems = state.items.filter((item) => state.selected.has(item.path));
-      const totalBytes = selectedItems.reduce((acc, item) => acc + item.size, 0);
-      const confirmed = window.confirm(
-        `Delete ${selectedItems.length} selected item(s) and free around ${formatBytes(totalBytes)}?`
-      );
-      if (!confirmed) return;
-      performDelete();
+      openConfirm();
+    }
+
+    const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let celebrationTimer = null;
+    let confettiRaf = null;
+
+    function celebrate(bytes, count) {
+      el.celebrateSub.textContent = `reclaimed across ${count} item${count === 1 ? "" : "s"}`;
+      el.celebration.hidden = false;
+      if (REDUCED_MOTION) {
+        el.celebrateAmount.textContent = formatBytes(bytes);
+      } else {
+        const start = performance.now();
+        const duration = 1600;
+        (function tick(now) {
+          const t = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          el.celebrateAmount.textContent = formatBytes(bytes * eased);
+          if (t < 1 && !el.celebration.hidden) requestAnimationFrame(tick);
+        })(start);
+        launchConfetti();
+      }
+      celebrationTimer = setTimeout(dismissCelebration, 6000);
+    }
+
+    function dismissCelebration() {
+      clearTimeout(celebrationTimer);
+      if (confettiRaf) cancelAnimationFrame(confettiRaf);
+      confettiRaf = null;
+      el.celebration.hidden = true;
+    }
+
+    function launchConfetti() {
+      const canvas = el.confettiCanvas;
+      const ctx = canvas.getContext("2d");
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#22d3ee", "#10b981", "#f59e0b"];
+      const parts = Array.from({ length: 180 }, () => ({
+        x: canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.3,
+        y: canvas.height * 0.55,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -6 - Math.random() * 10,
+        w: 6 + Math.random() * 6,
+        h: 4 + Math.random() * 4,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 1,
+      }));
+      const started = performance.now();
+      (function frame(now) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of parts) {
+          p.vy += 0.25; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          p.life = Math.max(0, 1 - (now - started) / 4000);
+          ctx.save();
+          ctx.globalAlpha = p.life;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        if (now - started < 4000 && !el.celebration.hidden) confettiRaf = requestAnimationFrame(frame);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      })(started);
     }
 
     function selectVisible() {
@@ -715,6 +826,11 @@
     el.scanBtn.addEventListener("click", startScan);
     el.stopBtn.addEventListener("click", stopScan);
     el.deleteBtn.addEventListener("click", deleteSelected);
+    el.confirmCancel.addEventListener("click", closeConfirm);
+    el.confirmDelete.addEventListener("click", () => { closeConfirm(); performDelete(); });
+    el.confirmModal.addEventListener("click", (event) => { if (event.target === el.confirmModal) closeConfirm(); });
+    el.celebrateClose.addEventListener("click", dismissCelebration);
+    el.celebration.addEventListener("click", (event) => { if (event.target === el.celebration) dismissCelebration(); });
     el.selectVisibleBtn.addEventListener("click", selectVisible);
     el.clearSelectionBtn.addEventListener("click", clearSelection);
 
