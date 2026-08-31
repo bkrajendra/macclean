@@ -15,7 +15,9 @@
 		"test": "svelte-kit sync && vitest run",
 		"test:watch": "svelte-kit sync && vitest",
 		"icons": "node scripts/gen-icons.mjs",
-		"tauri": "tauri"
+		"tauri": "tauri",
+		"clean": "rm -rf build .svelte-kit .eslintcache dist-artifacts RELEASE_NOTES.md src-tauri/gen/schemas src-tauri/target; cargo clean --manifest-path src-tauri/Cargo.toml 2>/dev/null || true",
+		"clean:all": "npm run clean && rm -rf node_modules"
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.37.0",
