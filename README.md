@@ -117,8 +117,12 @@ cargo test --workspace              # 47 unit + integration tests
 
 ### Regenerate icons
 
+`assets/icon-1024.png` is the icon master; `assets/icon.svg` is the editable
+source.
+
 ```bash
-# edit assets/icon.svg, then:
+# drop a new assets/icon-1024.png (or edit assets/icon.svg with
+# @resvg/resvg-js installed), then:
 npm run icons
 ```
 

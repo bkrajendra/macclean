@@ -10,3 +10,6 @@ node_modules/
 src-tauri/**/*.rs
 # docs are hand-formatted (tables, alignment)
 docs/
+# icon sources
+assets/
+src-tauri/icons/

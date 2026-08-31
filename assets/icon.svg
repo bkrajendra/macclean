@@ -1,23 +1,138 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#7c5cfc"/>
-      <stop offset="0.55" stop-color="#a855f7"/>
-      <stop offset="1" stop-color="#f472b6"/>
+    <!-- Soft MacClean-style violet → magenta background -->
+    <linearGradient id="bg" x1="150" y1="120" x2="870" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7547F5"/>
+      <stop offset="0.52" stop-color="#A64BEF"/>
+      <stop offset="1" stop-color="#F04491"/>
     </linearGradient>
+
+    <!-- Very subtle background lighting -->
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(735 690) rotate(-35) scale(420 360)">
+      <stop stop-color="#FF8CC6" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#FF8CC6" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Broom highlight -->
+    <linearGradient id="whiteShape" x1="360" y1="370" x2="650" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F3F0FF"/>
+    </linearGradient>
+
+    <filter id="shadow" x="250" y="280" width="560" height="520" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#3B1A91" flood-opacity="0.20"/>
+    </filter>
+
+    <filter id="smallShadow" x="0" y="0" width="1024" height="1024" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#32157D" flood-opacity="0.18"/>
+    </filter>
   </defs>
 
-  <rect x="112" y="112" width="800" height="800" rx="200" fill="url(#bg)"/>
+  <!-- App icon background -->
+  <rect x="96" y="96" width="832" height="832" rx="218" fill="url(#bg)"/>
+  <rect x="96" y="96" width="832" height="832" rx="218" fill="url(#glow)"/>
 
-  <g transform="translate(512,512) scale(20) translate(-12,-12)"
-     fill="none" stroke="#ffffff" stroke-width="1.7"
-     stroke-linecap="round" stroke-linejoin="round">
-    <path d="M19.4 4.6 13 11"/>
-    <path d="M15.5 8.5 9 15c-1.7 1.7-1.9 4.2-1.9 4.2s2.5-.2 4.2-1.9l6.5-6.5"/>
-    <path d="M8.2 15.8 4.6 19.4"/>
-    <path d="M6.2 12.8 5 12l1-2.4" stroke-opacity="0.85"/>
+  <!-- Subtle inner highlight -->
+  <rect x="112" y="112" width="800" height="800" rx="202"
+        stroke="white" stroke-opacity="0.10" stroke-width="3"/>
+
+  <!-- Broom -->
+  <g filter="url(#shadow)">
+    <!-- Handle -->
+    <path
+      d="M665 282
+         C680 265 707 264 724 279
+         C741 294 743 320 728 338
+         L548 550
+         L474 490
+         Z"
+      fill="url(#whiteShape)"/>
+
+    <!-- Handle subtle highlight -->
+    <path
+      d="M684 294
+         C694 284 708 285 718 293
+         C727 302 728 316 719 327
+         L542 536
+         L522 518
+         Z"
+      fill="white"
+      fill-opacity="0.55"/>
+
+    <!-- Broom neck / crossbar -->
+    <rect x="448" y="482" width="245" height="74" rx="37"
+          transform="rotate(43 448 482)"
+          fill="url(#whiteShape)"/>
+
+    <!-- Broom head -->
+    <path
+      d="M357 588
+         C348 577 350 561 362 551
+         L431 493
+         C443 483 461 485 472 497
+         L610 641
+         C620 652 620 669 610 680
+         L557 733
+         C546 744 528 745 516 735
+         Z"
+      fill="url(#whiteShape)"/>
+
+    <!-- Broom bristle cuts -->
+    <path d="M424 555 L487 620"
+          stroke="#E7E1FA" stroke-width="22" stroke-linecap="round"/>
+    <path d="M394 580 L458 645"
+          stroke="#E7E1FA" stroke-width="22" stroke-linecap="round"/>
+    <path d="M463 522 L527 587"
+          stroke="#E7E1FA" stroke-width="22" stroke-linecap="round"/>
   </g>
 
-  <path d="M700 300 l14 -44 14 44 44 14 -44 14 -14 44 -14 -44 -44 -14 z" fill="#ffffff"/>
-  <circle cx="330" cy="690" r="14" fill="#ffffff" fill-opacity="0.9"/>
+  <!-- Main sparkle -->
+  <g filter="url(#smallShadow)">
+    <path
+      d="M786 378
+         L804 429
+         L855 447
+         L804 465
+         L786 516
+         L768 465
+         L717 447
+         L768 429
+         Z"
+      fill="white"/>
+  </g>
+
+  <!-- Small sparkle -->
+  <path
+    d="M290 333
+       L300 360
+       L327 370
+       L300 380
+       L290 407
+       L280 380
+       L253 370
+       L280 360
+       Z"
+    fill="white"
+    fill-opacity="0.94"/>
+
+  <!-- Tiny sparkle -->
+  <path
+    d="M707 238
+       L714 256
+       L732 263
+       L714 270
+       L707 288
+       L700 270
+       L682 263
+       L700 256
+       Z"
+    fill="white"
+    fill-opacity="0.82"/>
+
+  <!-- Accent dot -->
+  <circle cx="302" cy="758" r="17" fill="white" fill-opacity="0.94"/>
+
+  <!-- Tiny accent dot -->
+  <circle cx="766" cy="650" r="9" fill="white" fill-opacity="0.55"/>
 </svg>
