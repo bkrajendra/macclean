@@ -45,11 +45,16 @@ Exactly two modes. No hidden third mode. Preserve the "unknown → safe" normali
 
 ## 3. Scan scopes  (`SCOPE_DEFINITIONS`, `normalize_scope`, `scope_roots`, `homes_for_scope`)
 
-| Scope | Roots walked | Exact-rule homes | Notes | Migration target |
-|-------|--------------|------------------|-------|------------------|
-| **`projects`** (default; unknown → `projects`) | `~/projects` (`PROJECTS_ROOT`) | none (recursive rules only) | Recursive rules keep their own label/category | `core::scope::Scope::Projects` |
-| **`home`** | `~` (`HOME_ROOT`) | `[~]` | Recursive matches re-classified by `classify_exact_rule` | `core::scope::Scope::Home` |
-| **`full_mac`** | `discover_user_homes()` + `/Library`, `/opt/homebrew`, `/usr/local` | all discovered homes | Also runs `SYSTEM_EXACT_RULES`; shows admin hint | `core::scope::Scope::FullMac` |
+| Scope | Roots walked | Notes | Migration target |
+|-------|--------------|-------|------------------|
+| **`projects`** (default; unknown → `projects`) | `~/projects` (`PROJECTS_ROOT`) | Recursive rules keep their own label/category. **`exact_candidates` still runs against `~`** (Python calls it for every scope via `homes_for_scope`, which returns `[HOME_ROOT]`), so a `projects` scan also lists `~/Library/Caches/*`, `~/Library/Logs/*`, `~/.Trash/*`, `~/.npm/_cacache`, … — preserved verbatim in the port. | `core::scope::Scope::Projects` |
+| **`home`** | `~` (`HOME_ROOT`) | Recursive matches re-classified by `classify_exact_rule` against `[~]` | `core::scope::Scope::Home` |
+| **`full_mac`** | `discover_user_homes()` + `/Library`, `/opt/homebrew`, `/usr/local` | Also runs `SYSTEM_EXACT_RULES`; recursive matches re-classified against all discovered homes; shows admin hint | `core::scope::Scope::FullMac` |
+
+> `core::scanner::scan_with_roots(.., include_exact_rules = false)` is an added
+> primitive (no Python equivalent) that walks only the given directories with the
+> recursive rules — used for hermetic tests and a future "scan this folder"
+> action. `core::scanner::scan` keeps the exact Python behaviour.
 
 Extra roots: `MACCLEAN_EXTRA_SCAN_ROOTS` env var (comma-separated) is appended to
 the root list for **every** scope. → migrate as `ScanOptions.extra_roots` **and**
@@ -63,7 +68,7 @@ that are directories; plus `HOME_ROOT` if not already present (realpath-compared
 
 ## 4. Cleanup rules
 
-### 4.1 Recursive pattern rules  (`TARGET_RULES`, 22 entries)
+### 4.1 Recursive pattern rules  (`TARGET_RULES`, 21 live entries)
 
 `kind` ∈ {`dir`, `file_exact`, `file_suffix`}. A matched **directory** is emitted
 as a candidate and **not descended into** (`dirs[:]` pruning).
