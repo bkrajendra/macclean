@@ -27,3 +27,13 @@ vite.config.ts.timestamp-*
 *.scaffold
 /dist-artifacts
 /RELEASE_NOTES.md
+
+# --- Signing material — NEVER commit (see docs/signing.md) ---
+docs/sign/
+/private_keys/
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
