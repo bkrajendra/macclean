@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Type-check (svelte-check)
         run: npm run check
       - name: Format check (prettier)
@@ -69,7 +69,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Build app bundle (no dmg)
         run: npm run tauri build -- --target aarch64-apple-darwin --bundles app
 
@@ -83,7 +83,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: npm audit (production, high+)
         run: npm audit --omit=dev --audit-level=high
       - uses: dtolnay/rust-toolchain@stable

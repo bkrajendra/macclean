@@ -66,7 +66,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
 
       - name: Stamp version ${{ needs.version.outputs.version }}
         run: node scripts/set-version.mjs "${{ needs.version.outputs.version }}"
