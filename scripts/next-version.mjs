@@ -30,6 +30,11 @@ const first = prev === null;
 let version;
 let commits = [];
 
+// `releasable` = there is at least one feat / fix / perf / breaking change since
+// the last tag. A run with only chore/docs/ci/test/style/refactor commits builds
+// and tests on CI but does not cut a new version (avoids version churn).
+let releasable = first;
+
 if (first) {
 	version = '1.0.0';
 } else {
@@ -45,9 +50,14 @@ if (first) {
 		const subject = c.split('\x1f')[0] ?? '';
 		if (/^[a-z]+(\([^)]*\))?!:/.test(subject) || /BREAKING CHANGE/.test(c)) {
 			bump = 'major';
+			releasable = true;
 			break;
 		}
-		if (/^feat(\([^)]*\))?:/.test(subject)) bump = 'minor';
+		if (/^feat(\([^)]*\))?:/.test(subject)) {
+			bump = 'minor';
+			releasable = true;
+		}
+		if (/^(fix|perf)(\([^)]*\))?:/.test(subject)) releasable = true;
 	}
 
 	if (bump === 'major') version = `${maj + 1}.0.0`;
@@ -96,8 +106,8 @@ fs.writeFileSync(notesFile, notes);
 if (process.env.GITHUB_OUTPUT) {
 	fs.appendFileSync(
 		process.env.GITHUB_OUTPUT,
-		`version=${version}\ntag=${tag}\nprev=${prev ?? ''}\nfirst=${first}\nnotes_file=${notesFile}\n`
+		`version=${version}\ntag=${tag}\nprev=${prev ?? ''}\nfirst=${first}\nreleasable=${releasable}\nnotes_file=${notesFile}\n`
 	);
 }
 
-console.log(JSON.stringify({ version, tag, prev, first, notesFile }, null, 2));
+console.log(JSON.stringify({ version, tag, prev, first, releasable, notesFile }, null, 2));

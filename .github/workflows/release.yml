@@ -37,6 +37,8 @@ jobs:
         run: node scripts/next-version.mjs
       - id: decide
         name: Decide whether to release
+        env:
+          RELEASABLE: ${{ steps.v.outputs.releasable }}
         run: |
           msg="$(git log -1 --pretty=%s)"
           if [[ "$msg" == chore\(release\):* ]]; then
@@ -45,6 +47,9 @@ jobs:
           elif git describe --exact-match --tags HEAD >/dev/null 2>&1; then
             echo "release=false" >> "$GITHUB_OUTPUT"
             echo "Skipping: HEAD is already tagged."
+          elif [[ "$RELEASABLE" != "true" ]]; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping: no feat/fix/perf/breaking commits since the last tag."
           else
             echo "release=true" >> "$GITHUB_OUTPUT"
           fi

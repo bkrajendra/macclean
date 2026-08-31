@@ -22,7 +22,7 @@ Updated: 2026-08-31
 | Scan scopes: Projects / Home / Full Mac (§3) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `MACCLEAN_EXTRA_SCAN_ROOTS` + `extra_roots` (§3) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | User-home discovery (§3) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Recursive pattern rules ×22 (§4.1) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Recursive pattern rules ×21 (§4.1) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | User exact rules ×14 (§4.2) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | System exact rules ×6 (§4.3) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Exact-tree reclassification (§4.4) | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -58,26 +58,28 @@ Updated: 2026-08-31
 | Frontend tests (Vitest) (§21) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Workflow test: scan→select→delete→verify (§21) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CI workflow (`ci.yml`) (§17) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Release workflow + semver automation (`release.yml`) (§16–17) | ✅ | ✅ | ✅ | ✅ | 🟡 |
-| Release artifacts: `.dmg` + `.app.zip` (§18) | ✅ | ✅ | ✅ | ✅ | 🟡 |
-| Code-signing / notarisation hooks (disabled) (§19) | ✅ | ✅ | ✅ | n/a | n/a |
-| Updater scaffolding (disabled) (§20) | ✅ | ✅ | ✅ | n/a | n/a |
+| Release workflow + semver automation (`release.yml`) (§16–17) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Release artifacts: `.dmg` + `.app.zip` + `SHA256SUMS` (§18) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Code-signing / notarisation hooks (opt-in, off) (§19) | ✅ | ✅ | ✅ | n/a | n/a |
+| Updater scaffolding (opt-in, off) (§20) | ✅ | ✅ | ✅ | n/a | n/a |
 | README rewrite + docs (§24) | ✅ | ✅ | ✅ | n/a | ✅ |
 | Remove Python from `main` (§23) | ✅ | ✅ | ✅ | n/a | ✅ |
 
 ## Notes
 
-- **Verified on GitHub Actions** (`main` @ push): `Rust (fmt · clippy · test)`
-  green — full-workspace `cargo fmt --check` + `cargo clippy --workspace
-  --all-targets -D warnings` + `cargo test --workspace`. Frontend
-  check/lint/test/build and the Tauri build-validation job run on the same
-  workflow.
+- **CI green on GitHub Actions** (`main`): `Frontend (check · lint · test · build)`,
+  `Rust (fmt · clippy · test)` — full-workspace `cargo fmt --check` +
+  `cargo clippy --workspace --all-targets -D warnings` + `cargo test --workspace` —
+  `Tauri build validation`, and `Dependency audit`.
+- **Release green on GitHub Actions**: `release.yml` on the first push to `main`
+  determined `v1.0.0` (no prior tag ⇒ first native release), built the universal
+  bundle, ran all tests, tagged `v1.0.0`, and published the GitHub Release with
+  `MacClean_1.0.0_universal.dmg`, `MacClean_1.0.0_universal.app.zip` and
+  `SHA256SUMS.txt` →
+  <https://github.com/bkrajendra/macclean/releases/tag/v1.0.0>
 - **Local verification**: 47 Rust tests + 38 Vitest tests green; `svelte-check`
-  and `prettier` clean; a release `tauri build` produced `MacClean.app` +
-  `MacClean_1.0.0_aarch64.dmg`.
-- **Release verification (🟡)** completes when the `release.yml` run on `main`
-  publishes `v1.0.0` with `.dmg` + `.app.zip` attached. The workflow is authored,
-  self-guarded against re-trigger loops, and gated on green tests + build.
-- Signing / notarisation / updater are intentionally inert until Apple credentials
-  and an updater signing key are supplied as GitHub Secrets — the workflow steps
-  are present and activate automatically when the secrets exist.
+  and `prettier` clean; a local `tauri build` produced `MacClean.app` + a `.dmg`.
+- Signing / notarisation and the Tauri updater are intentionally inert until
+  valid Apple credentials / an updater signing key are added as GitHub Secrets
+  **and** the repo variables `ENABLE_APPLE_SIGNING` / `ENABLE_TAURI_UPDATER` are
+  set to `true` — the workflow steps activate automatically then.
