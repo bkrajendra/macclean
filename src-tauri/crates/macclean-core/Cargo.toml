@@ -1,6 +1,6 @@
 [package]
 name = "macclean-core"
-version = "1.0.3"
+version = "1.0.4"
 description = "MacClean filesystem, safety and cleanup-rules engine (no UI, no Tauri)"
 edition = "2021"
 rust-version = "1.77"
