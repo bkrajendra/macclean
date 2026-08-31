@@ -1,11 +1,5 @@
 <script lang="ts">
-	import {
-		File,
-		Folder,
-		FolderSymlink,
-		MoreHorizontal,
-		SquareArrowOutUpRight
-	} from '@lucide/svelte';
+	import { File, Folder, FolderSymlink, SquareArrowOutUpRight } from '@lucide/svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import CategoryChip from '$lib/components/CategoryChip.svelte';
 	import { api } from '$lib/api';
@@ -69,29 +63,13 @@
 		{candidate.group.replace(/^\/Users\/[^/]+/, '~')}
 	</span>
 
-	<details class="relative shrink-0">
-		<summary
-			class="grid h-8 w-8 cursor-pointer list-none place-items-center rounded-lg text-faint transition marker:hidden hover:bg-surface-2 hover:text-ink [&::-webkit-details-marker]:hidden"
-			aria-label="Row actions"
-		>
-			<MoreHorizontal class="h-4 w-4" />
-		</summary>
-		<div class="card absolute right-0 top-9 z-20 w-44 animate-scale-in p-1 text-sm shadow-pop">
-			<button
-				type="button"
-				class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-ink hover:bg-surface-3"
-				onclick={reveal}
-			>
-				<SquareArrowOutUpRight class="h-4 w-4 text-muted" /> Show in Finder
-			</button>
-			<button
-				type="button"
-				class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-ink hover:bg-surface-3"
-				onclick={onToggle}
-			>
-				<Checkbox checked={selected} label="toggle" class="pointer-events-none" />
-				{selected ? 'Deselect' : 'Select'}
-			</button>
-		</div>
-	</details>
+	<button
+		type="button"
+		aria-label="Show {candidate.ruleLabel} in Finder"
+		title="Show in Finder"
+		onclick={reveal}
+		class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-faint opacity-0 transition hover:bg-surface-2 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
+	>
+		<SquareArrowOutUpRight class="h-4 w-4" />
+	</button>
 </div>

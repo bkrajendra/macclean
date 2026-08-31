@@ -30,7 +30,7 @@
 	}
 
 	function onkeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') close();
+		if (open && e.key === 'Escape') close();
 	}
 
 	const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' } as const;

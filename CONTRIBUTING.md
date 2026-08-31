@@ -29,13 +29,13 @@ cargo test --workspace
 
 ## Where code goes
 
-| Concern | Location | Notes |
-|---------|----------|-------|
+| Concern                                                        | Location                          | Notes                                                                        |
+| -------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------- |
 | Anything that touches the filesystem, safety, or cleanup rules | `src-tauri/crates/macclean-core/` | pure Rust, **must** have unit tests; never touch a real system dir in a test |
-| IPC commands, event streaming, app state | `src-tauri/src/` | thin glue only |
-| Presentation, interaction | `src/lib/` | never builds a filesystem path — only sends candidate ids |
-| Pure UI logic (filter/sort/format) | `src/lib/utils/*.ts` | plain `.ts`, unit‑tested |
-| Reactive state | `src/lib/stores/*.svelte.ts` | Svelte 5 runes |
+| IPC commands, event streaming, app state                       | `src-tauri/src/`                  | thin glue only                                                               |
+| Presentation, interaction                                      | `src/lib/`                        | never builds a filesystem path — only sends candidate ids                    |
+| Pure UI logic (filter/sort/format)                             | `src/lib/utils/*.ts`              | plain `.ts`, unit‑tested                                                     |
+| Reactive state                                                 | `src/lib/stores/*.svelte.ts`      | Svelte 5 runes                                                               |
 
 Keep the IPC contract in sync: `macclean-core/src/model.rs` ↔
 `src/lib/types/ipc.ts` ↔ `src-tauri/src/events.rs` ↔ `src/lib/api/events.ts`.

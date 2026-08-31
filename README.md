@@ -18,31 +18,31 @@ No Python. No local HTTP server. No browser window. One `MacClean.app`.
 
 ## Screens
 
-| Configure | Scanning | Results | Cleaning |
-|-----------|----------|---------|----------|
+| Configure                            | Scanning                             | Results                              | Cleaning                             |
+| ------------------------------------ | ------------------------------------ | ------------------------------------ | ------------------------------------ |
 | ![](docs/ui-mock-design/screen1.png) | ![](docs/ui-mock-design/screen2.png) | ![](docs/ui-mock-design/screen3.png) | ![](docs/ui-mock-design/screen5.png) |
 
-*(Design references — the shipped UI follows this layout with the real engine
-data.)*
+_(Design references — the shipped UI follows this layout with the real engine
+data.)_
 
 ---
 
 ## Features
 
-- **Two modes** — *Safe* (caches + dependency folders) and *Aggressive* (also
+- **Two modes** — _Safe_ (caches + dependency folders) and _Aggressive_ (also
   build output, compiled artefacts, `*.pyc`).
-- **Three scopes** — *Projects* (`~/projects`), *User home* (`~` + user caches),
-  *Full Mac* (all user homes + system cache locations). Plus extra folders via
+- **Three scopes** — _Projects_ (`~/projects`), _User home_ (`~` + user caches),
+  _Full Mac_ (all user homes + system cache locations). Plus extra folders via
   the UI or the `MACCLEAN_EXTRA_SCAN_ROOTS` environment variable.
 - **21 recursive rules** (`node_modules`, `__pycache__`, `.next`, `target`,
   `.gradle`, `dist`, `.DS_Store`, …) + **14 user** + **6 system** exact cache
-  rules — ported verbatim from the Python app. See *What MacClean cleans* in the
+  rules — ported verbatim from the Python app. See _What MacClean cleans_ in the
   app, or [`docs/migration/feature-inventory.md`](docs/migration/feature-inventory.md).
 - **Native, cancellable scanner** — parallel byte sizing, incremental streamed
   results, progress reporting, per‑error tolerance, never follows symlinked
   directories, de‑duplicates by canonical path.
-- **Virtualised results** — search, category sidebar, sort, per‑row *Show in
-  Finder*, select‑all / clear, running "selected · reclaimable" totals.
+- **Virtualised results** — search, category sidebar, sort, per‑row _Show in
+  Finder_, select‑all / clear, running "selected · reclaimable" totals.
 - **Defensive deletion** — permanent (not Trash), with a per‑item outcome
   breakdown: Deleted / Skipped / Failed / Permission denied / Already gone /
   Changed / Protected.
@@ -64,11 +64,11 @@ data.)*
 
 1. Download `MacClean_<version>_universal.dmg` from the
    [latest release](https://github.com/bkrajendra/macclean/releases/latest).
-2. Open the DMG and drag **MacClean** into *Applications*.
+2. Open the DMG and drag **MacClean** into _Applications_.
 3. First launch: **right‑click ▸ Open** once (builds are not yet Apple‑notarised).
 4. For system‑level cache locations, grant **Full Disk Access**:
-   *System Settings ▸ Privacy & Security ▸ Full Disk Access* → enable **MacClean**
-   → re‑scan. MacClean works without it, but *Full Mac* scans will skip protected
+   _System Settings ▸ Privacy & Security ▸ Full Disk Access_ → enable **MacClean**
+   → re‑scan. MacClean works without it, but _Full Mac_ scans will skip protected
    directories (and say so).
 
 ---
@@ -145,7 +145,7 @@ macOS filesystem / system APIs
 ```
 
 - The **frontend never constructs a filesystem path.** It sends opaque
-  *candidate ids* from a scan session that Rust itself produced.
+  _candidate ids_ from a scan session that Rust itself produced.
 - Every deletion re‑runs the eight safety checks (session valid, candidate in
   session, still inside a permitted root, still not protected, unchanged since
   the scan, operation allowed, still exists, not a protected path) — see
