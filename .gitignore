@@ -1,10 +1,27 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# --- OS ---
+.DS_Store
+*.swp
 
-# Virtual environments
-.venv
+# --- Node / frontend ---
+node_modules
+/build
+/.svelte-kit
+/package
+/coverage
+.env
+.env.*
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# --- Rust / Tauri ---
+/src-tauri/target
+/src-tauri/gen/schemas
+/target
+
+# --- Tooling ---
+*.tsbuildinfo
+.eslintcache
+
+# --- Scratch ---
+*.scaffold
