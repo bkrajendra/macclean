@@ -55,7 +55,6 @@
 
 <div class="animate-fade-in space-y-7">
 	<StepHeading
-		step={2}
 		title="Scanning your Mac"
 		subtitle="Looking through the selected locations for unnecessary files…"
 	/>

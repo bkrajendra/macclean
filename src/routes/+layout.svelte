@@ -22,12 +22,10 @@
 	});
 </script>
 
-<div class="flex min-h-screen flex-col">
+<div class="flex h-screen flex-col overflow-hidden">
 	<TitleBar />
-	<main class="flex-1 px-3 pb-6 sm:px-5">
-		<div class="mx-auto w-full max-w-5xl">
-			{@render children()}
-		</div>
+	<main class="flex flex-1 flex-col overflow-y-auto px-4 pb-5 sm:px-6">
+		{@render children()}
 	</main>
 </div>
 

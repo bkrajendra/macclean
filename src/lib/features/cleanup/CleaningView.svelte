@@ -44,7 +44,6 @@
 
 <div class="animate-fade-in space-y-7">
 	<StepHeading
-		step={5}
 		title="Cleaning your Mac"
 		subtitle="Removing the items you selected — please don't quit MacClean."
 	/>

@@ -3,13 +3,11 @@
 	import type { Snippet } from 'svelte';
 
 	let {
-		step,
 		title,
 		subtitle,
 		complete = false,
 		actions
 	}: {
-		step?: number;
 		title: string;
 		subtitle?: string;
 		complete?: boolean;
@@ -24,8 +22,7 @@
 				<CircleCheck class="h-6 w-6 text-brand" />
 			{/if}
 			<h2 class="font-display text-2xl font-extrabold tracking-tight text-ink">
-				{#if step}<span class="text-brand">{step}.</span>
-				{/if}{title}
+				{title}
 			</h2>
 		</div>
 		{#if subtitle}

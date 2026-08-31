@@ -45,7 +45,6 @@
 
 <div class="animate-slide-up space-y-6">
 	<StepHeading
-		step={1}
 		title="Configure your scan"
 		subtitle="Choose how and where MacClean should look for unnecessary files."
 	/>

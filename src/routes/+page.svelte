@@ -72,7 +72,7 @@
 	});
 </script>
 
-<div class="card mt-1 flex min-h-[calc(100vh-5.5rem)] flex-col p-5 sm:p-7">
+<div class="card mx-auto flex w-full max-w-[1800px] flex-1 flex-col p-5 sm:p-7">
 	<AppHeader>
 		{#snippet actions()}
 			<IconButton label="What MacClean cleans" onclick={() => (showRules = true)}>
