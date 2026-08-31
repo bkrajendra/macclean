@@ -41,19 +41,26 @@ must be green before merge.
 
 ## Code signing & notarisation
 
-The `build` job passes these straight through to `tauri build`. They are all
-optional — when unset, Tauri does ad‑hoc signing and the build is unsigned.
+Signing is **opt‑in** so a broken/expired certificate can never block a release.
+The build ships **ad‑hoc‑signed** by default (Gatekeeper prompt on first launch).
 
-| Secret | Purpose |
-|--------|---------|
-| `APPLE_CERTIFICATE` | base64 of the *Developer ID Application* `.p12` |
-| `APPLE_CERTIFICATE_PASSWORD` | its password |
-| `APPLE_SIGNING_IDENTITY` | e.g. `Developer ID Application: Name (TEAMID)` |
-| `APPLE_ID` / `APPLE_PASSWORD` | Apple ID + app‑specific password for notarisation |
-| `APPLE_TEAM_ID` | Apple Developer Team ID |
+To enable real signing + notarisation:
 
-Add all six → the next release is signed **and** notarised, and the DMG is
-stapled automatically. No workflow change needed.
+1. Add these **repository secrets**:
+
+   | Secret | Purpose |
+   |--------|---------|
+   | `APPLE_CERTIFICATE` | base64 of the *Developer ID Application* `.p12` |
+   | `APPLE_CERTIFICATE_PASSWORD` | its password |
+   | `APPLE_SIGNING_IDENTITY` | e.g. `Developer ID Application: Name (TEAMID)` |
+   | `APPLE_ID` / `APPLE_PASSWORD` | Apple ID + app‑specific password for notarisation |
+   | `APPLE_TEAM_ID` | Apple Developer Team ID |
+
+2. Set the **repository variable** `ENABLE_APPLE_SIGNING` = `true`
+   (*Settings ▸ Secrets and variables ▸ Actions ▸ Variables*).
+
+The next release is then signed, notarised and the DMG stapled — no workflow
+change needed. Leave the variable unset (or `false`) to keep shipping ad‑hoc.
 
 ## Auto‑update
 
@@ -67,8 +74,9 @@ stapled automatically. No workflow change needed.
 3. `.plugin(tauri_plugin_updater::Builder::new().build())` in `lib.rs` behind
    `#[cfg(desktop)]`.
 
-The release job already forwards `TAURI_SIGNING_PRIVATE_KEY[_PASSWORD]` so
-updater artifacts are produced as soon as the key exists.
+The release job forwards `TAURI_SIGNING_PRIVATE_KEY[_PASSWORD]` only when the
+repository variable `ENABLE_TAURI_UPDATER` = `true`, so updater artifacts are
+produced as soon as the key and that variable exist.
 
 ## Supported architectures
 
