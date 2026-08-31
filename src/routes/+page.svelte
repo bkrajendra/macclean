@@ -1,156 +1,126 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+	import { onDestroy, onMount } from 'svelte';
+	import { Info, ListChecks, Settings2, ShieldCheck } from '@lucide/svelte';
+	import AppHeader from '$lib/components/AppHeader.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import DashboardView from '$lib/features/dashboard/DashboardView.svelte';
+	import ScanningView from '$lib/features/scan/ScanningView.svelte';
+	import ResultsView from '$lib/features/results/ResultsView.svelte';
+	import CleaningView from '$lib/features/cleanup/CleaningView.svelte';
+	import CleanupSummaryView from '$lib/features/cleanup/CleanupSummaryView.svelte';
+	import ConfirmCleanupDialog from '$lib/features/cleanup/ConfirmCleanupDialog.svelte';
+	import ScanErrorsDialog from '$lib/features/results/ScanErrorsDialog.svelte';
+	import PermissionsDialog from '$lib/features/permissions/PermissionsDialog.svelte';
+	import RulesDialog from '$lib/features/rules/RulesDialog.svelte';
+	import AboutDialog from '$lib/features/about/AboutDialog.svelte';
+	import SettingsDialog from '$lib/features/settings/SettingsDialog.svelte';
+	import { api } from '$lib/api';
+	import { FALLBACK_SCOPES } from '$lib/constants/scopes';
+	import type { ScopeDescriptor } from '$lib/types/ipc';
+	import { scan } from '$lib/stores/scan.svelte';
+	import { system } from '$lib/stores/system.svelte';
+	import { toasts } from '$lib/stores/toast.svelte';
 
-  let name = $state("");
-  let greetMsg = $state("");
+	let scopes = $state<ScopeDescriptor[]>(FALLBACK_SCOPES);
+	let showConfirm = $state(false);
+	let showErrors = $state(false);
+	let showPermissions = $state(false);
+	let showRules = $state(false);
+	let showAbout = $state(false);
+	let showSettings = $state(false);
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
-  }
+	onMount(async () => {
+		try {
+			scopes = await api.listScopes();
+		} catch {
+			scopes = FALLBACK_SCOPES;
+		}
+	});
+	onDestroy(() => void scan.dispose());
+
+	let notifiedScanId = '';
+	$effect(() => {
+		const s = scan.summary;
+		if (s && s.scanId !== notifiedScanId && scan.phase === 'results') {
+			notifiedScanId = s.scanId;
+			if (s.state === 'cancelled') {
+				toasts.warning('Scan stopped', `${s.totalCount} items kept and still selectable.`);
+			} else if (s.errors.length || s.permissionDeniedCount) {
+				toasts.warning(
+					'Scan finished with warnings',
+					`${s.permissionDeniedCount + s.errors.length} locations could not be read.`
+				);
+			}
+			void system.refreshPermissions();
+		}
+	});
+
+	let notifiedCleanup = '';
+	$effect(() => {
+		const r = scan.cleanupResult;
+		if (r && scan.phase === 'summary' && r.scanId + r.deletedCount !== notifiedCleanup) {
+			notifiedCleanup = r.scanId + r.deletedCount;
+			if (r.failedCount > 0) {
+				toasts.error(
+					'Some items could not be removed',
+					`${r.failedCount} failed, ${r.deletedCount} cleaned.`
+				);
+			} else {
+				toasts.success('Cleanup complete', `Reclaimed space across ${r.deletedCount} items.`);
+			}
+		}
+	});
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<div class="card mt-1 flex min-h-[calc(100vh-5.5rem)] flex-col p-5 sm:p-7">
+	<AppHeader>
+		{#snippet actions()}
+			<IconButton label="What MacClean cleans" onclick={() => (showRules = true)}>
+				<ListChecks class="h-4 w-4" />
+			</IconButton>
+			<IconButton label="Permissions" onclick={() => (showPermissions = true)}>
+				<ShieldCheck class="h-4 w-4" />
+			</IconButton>
+			<IconButton label="Scan defaults" onclick={() => (showSettings = true)}>
+				<Settings2 class="h-4 w-4" />
+			</IconButton>
+			<IconButton label="About MacClean" onclick={() => (showAbout = true)}>
+				<Info class="h-4 w-4" />
+			</IconButton>
+		{/snippet}
+	</AppHeader>
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
+	<div class="mt-7 flex flex-1 flex-col">
+		{#if scan.phase === 'idle'}
+			<DashboardView
+				{scopes}
+				onShowRules={() => (showRules = true)}
+				onShowPermissions={() => (showPermissions = true)}
+			/>
+		{:else if scan.phase === 'scanning'}
+			<ScanningView />
+		{:else if scan.phase === 'results'}
+			<ResultsView
+				onConfirmClean={() => (showConfirm = true)}
+				onShowErrors={() => (showErrors = true)}
+			/>
+		{:else if scan.phase === 'cleaning'}
+			<CleaningView />
+		{:else if scan.phase === 'summary'}
+			<CleanupSummaryView />
+		{/if}
+	</div>
+</div>
 
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
-</main>
-
-<style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
-</style>
+<ConfirmCleanupDialog bind:open={showConfirm} onconfirm={() => scan.clean()} />
+<ScanErrorsDialog
+	bind:open={showErrors}
+	onGrant={() => {
+		showErrors = false;
+		showPermissions = true;
+	}}
+/>
+<PermissionsDialog bind:open={showPermissions} />
+<RulesDialog bind:open={showRules} />
+<AboutDialog bind:open={showAbout} />
+<SettingsDialog bind:open={showSettings} {scopes} />

@@ -1,0 +1,12 @@
+# package managers
+package-lock.json
+# generated
+.svelte-kit/
+build/
+src-tauri/target/
+src-tauri/gen/
+node_modules/
+# rust owns its own formatting
+src-tauri/**/*.rs
+# docs are hand-formatted (tables, alignment)
+docs/
