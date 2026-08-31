@@ -136,6 +136,8 @@ export interface PermissionProbe {
 export interface PermissionStatus {
 	fullDiskAccess: boolean;
 	homeReadable: boolean;
+	appPath: string;
+	adHocSigned: boolean;
 	probes: PermissionProbe[];
 }
 

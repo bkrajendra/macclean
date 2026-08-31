@@ -307,6 +307,12 @@ pub struct PermissionStatus {
     /// Best-effort guess at whether the app has Full Disk Access.
     pub full_disk_access: bool,
     pub home_readable: bool,
+    /// The `.app` bundle (or executable) this process is running from — so the
+    /// user can check they granted access to the right copy.
+    pub app_path: String,
+    /// True when the running binary is not Developer-ID signed / notarised, so a
+    /// Full Disk Access grant may not survive replacing the app bundle.
+    pub ad_hoc_signed: bool,
     pub probes: Vec<PermissionProbe>,
 }
 

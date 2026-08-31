@@ -62,6 +62,9 @@ To enable real signing + notarisation:
 The next release is then signed, notarised and the DMG stapled — no workflow
 change needed. Leave the variable unset (or `false`) to keep shipping ad‑hoc.
 
+Step-by-step (creating the certificate, app-specific password, the API-key
+alternative): **[`docs/signing.md`](signing.md)**.
+
 ## Auto‑update
 
 `tauri-plugin-updater` is an **optional** dependency (`--features updater`) and is

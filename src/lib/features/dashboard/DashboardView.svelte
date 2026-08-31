@@ -49,7 +49,7 @@
 		subtitle="Choose how and where MacClean should look for unnecessary files."
 	/>
 
-	<PermissionNotice onDetails={onShowPermissions} />
+	<PermissionNotice scope={settings.scope} onDetails={onShowPermissions} />
 
 	<div class="card p-5">
 		<div class="grid gap-5 md:grid-cols-3">

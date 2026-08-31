@@ -5,7 +5,54 @@
 
 use crate::model::{PermissionProbe, PermissionStatus, SystemInfo};
 use crate::safety;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+/// The `.app` bundle (or bare executable) this process is running from.
+pub fn running_app_path() -> PathBuf {
+    let exe = std::env::current_exe().unwrap_or_default();
+    let mut cur = exe.as_path();
+    loop {
+        if cur
+            .file_name()
+            .map(|n| n.to_string_lossy().ends_with(".app"))
+            .unwrap_or(false)
+        {
+            return cur.to_path_buf();
+        }
+        match cur.parent() {
+            Some(p) => cur = p,
+            None => return exe,
+        }
+    }
+}
+
+/// True when the running binary is *not* Developer-ID / Apple-Development signed
+/// (i.e. ad-hoc-signed or unsigned) — a Full Disk Access grant then may not
+/// survive replacing the app bundle with a new build.
+pub fn is_ad_hoc_signed(app: &Path) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        let out = std::process::Command::new("/usr/bin/codesign")
+            .arg("--display")
+            .arg("--verbose=2")
+            .arg(app)
+            .output();
+        match out {
+            Ok(o) => {
+                let text = String::from_utf8_lossy(&o.stderr);
+                !text.contains("Authority=Developer ID Application")
+                    && !text.contains("Authority=Apple Development")
+                    && !text.contains("Authority=3rd Party Mac Developer")
+            }
+            Err(_) => true,
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = app;
+        false
+    }
+}
 
 /// True when the effective uid is 0. MacClean is *not* meant to run this way —
 /// this only exists to warn the user if they launched it under `sudo`.
@@ -139,9 +186,12 @@ pub fn permission_status() -> PermissionStatus {
         probes.push(p);
     }
 
+    let app_path = running_app_path();
     PermissionStatus {
         full_disk_access: verdict.unwrap_or(home_readable),
         home_readable,
+        ad_hoc_signed: is_ad_hoc_signed(&app_path),
+        app_path: app_path.to_string_lossy().into_owned(),
         probes,
     }
 }

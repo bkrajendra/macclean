@@ -189,9 +189,10 @@ Pushes to `main` run [`.github/workflows/release.yml`](.github/workflows/release
 determine the next `vX.Y.Z` from tags + Conventional Commits (no tag ⇒ `v1.0.0`),
 stamp the version, run **all** tests, `tauri build` a universal bundle, then —
 only on success — tag the commit and publish a GitHub Release with the `.dmg`,
-`.app.zip` and `SHA256SUMS`. Apple signing/notarisation and the Tauri updater
-activate automatically once the corresponding repository secrets exist.
-See [`docs/release-process.md`](docs/release-process.md).
+`.app.zip` and `SHA256SUMS`. Builds are ad‑hoc‑signed by default;
+Developer ID signing + notarisation turn on when you add the Apple secrets and
+set `ENABLE_APPLE_SIGNING=true` — see [`docs/signing.md`](docs/signing.md).
+Full pipeline: [`docs/release-process.md`](docs/release-process.md).
 
 ---
 
