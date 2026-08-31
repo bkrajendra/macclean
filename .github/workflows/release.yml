@@ -89,20 +89,6 @@ jobs:
         if: vars.ENABLE_APPLE_SIGNING != 'true'
         run: npm run tauri build -- --target universal-apple-darwin
 
-      # Notarisation via App Store Connect API key (optional alternative to
-      # APPLE_ID / APPLE_PASSWORD). Writes the .p8 and exports APPLE_API_KEY_PATH
-      # for the build step.
-      - name: Write App Store Connect API key
-        if: vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_API_KEY_CONTENT != ''
-        env:
-          KEY_ID: ${{ secrets.APPLE_API_KEY }}
-          KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
-        run: |
-          mkdir -p "$HOME/private_keys"
-          p8="$HOME/private_keys/AuthKey_${KEY_ID}.p8"
-          printf '%s' "$KEY_CONTENT" > "$p8"
-          echo "APPLE_API_KEY_PATH=$p8" >> "$GITHUB_ENV"
-
       - name: Build (Developer ID signed + notarised)
         if: vars.ENABLE_APPLE_SIGNING == 'true'
         run: npm run tauri build -- --target universal-apple-darwin
@@ -111,12 +97,8 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # Apple ID + app-specific password (used when no API key is set):
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          # …or App Store Connect API key (APPLE_API_KEY_PATH comes from the step above):
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 

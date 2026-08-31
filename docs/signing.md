@@ -74,17 +74,19 @@ If you prefer an API key for notarisation:
 1. App Store Connect ▸ **Users and Access ▸ Integrations ▸ App Store Connect API**
    ▸ generate a key with the **Developer** role ▸ download the `.p8` (once only).
    Note the **Key ID** and **Issuer ID**.
-2. Add secrets instead of `APPLE_ID` / `APPLE_PASSWORD`:
+2. In the **“Build (Developer ID signed + notarised)”** step of
+   `.github/workflows/release.yml`, drop `APPLE_ID` / `APPLE_PASSWORD` and add:
 
-   | Secret | Value |
-   |--------|-------|
-   | `APPLE_API_KEY` | the Key ID |
-   | `APPLE_API_ISSUER` | the Issuer ID |
-   | `APPLE_API_KEY_PATH` | `~/private_keys/AuthKey_<KEYID>.p8` — the workflow writes it from `APPLE_API_KEY_CONTENT` |
-   | `APPLE_API_KEY_CONTENT` | contents of the `.p8` file |
+   ```yaml
+           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}          # Key ID
+           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}    # Issuer ID
+           APPLE_API_KEY_PATH: ${{ github.workspace }}/AuthKey.p8
+   ```
 
-The signed build step passes all of these through; Tauri uses the API key when
-present and falls back to `APPLE_ID` / `APPLE_PASSWORD` otherwise.
+   and a preceding step that writes the key:
+   `printf '%s' "${{ secrets.APPLE_API_KEY_CONTENT }}" > "$GITHUB_WORKSPACE/AuthKey.p8"`.
+
+Tauri uses the API key when `APPLE_API_KEY` is set.
 
 ---
 
