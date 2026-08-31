@@ -1,28 +1,21 @@
 <script lang="ts">
-	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import type { Snippet } from 'svelte';
 	import Logo from './Logo.svelte';
 
 	let { actions }: { actions?: Snippet } = $props();
-
-	async function zoom() {
-		try {
-			await getCurrentWindow().toggleMaximize();
-		} catch {
-			/* not running inside the Tauri shell */
-		}
-	}
 </script>
 
-<header class="flex items-start justify-between gap-4">
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="drag flex items-center gap-3.5" role="presentation" ondblclick={zoom}>
+<header data-tauri-drag-region class="drag flex items-start justify-between gap-4">
+	<div data-tauri-drag-region class="flex items-center gap-3.5">
 		<Logo size={46} />
-		<div>
-			<h1 class="font-display text-[1.6rem] font-extrabold leading-none tracking-tight text-ink">
+		<div data-tauri-drag-region>
+			<h1
+				data-tauri-drag-region
+				class="font-display text-[1.6rem] font-extrabold leading-none tracking-tight text-ink"
+			>
 				MacClean
 			</h1>
-			<p class="mt-1.5 text-sm text-muted">
+			<p data-tauri-drag-region class="mt-1.5 text-sm text-muted">
 				Find and clear caches, build output and leftovers across your Mac.
 			</p>
 		</div>

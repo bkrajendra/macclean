@@ -269,3 +269,10 @@ pub fn open_privacy_settings(app: AppHandle) -> Result<(), String> {
         )
         .map_err(|e| e.to_string())
 }
+
+/// Relaunch the app — macOS applies a new Full Disk Access grant only to a fresh
+/// process, so the permissions UI offers this after the user grants access.
+#[tauri::command]
+pub fn restart_app(app: AppHandle) {
+    app.restart();
+}

@@ -28,5 +28,6 @@ export const api = {
 	deleteSelected: (request: DeleteRequest) => invoke<DeleteResult>('delete_selected', { request }),
 
 	revealInFinder: (path: string) => invoke<void>('reveal_in_finder', { path }),
-	openPrivacySettings: () => invoke<void>('open_privacy_settings')
+	openPrivacySettings: () => invoke<void>('open_privacy_settings'),
+	restartApp: () => invoke<void>('restart_app')
 };

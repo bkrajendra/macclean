@@ -15,6 +15,14 @@
 			toasts.error('Could not open System Settings', String(e));
 		}
 	}
+
+	async function relaunch() {
+		try {
+			await api.restartApp();
+		} catch (e) {
+			toasts.error('Could not relaunch', String(e));
+		}
+	}
 </script>
 
 <Dialog bind:open title="Permissions" description="What MacClean can currently read" size="md">
@@ -53,13 +61,16 @@
 			<ol class="mt-1.5 list-decimal space-y-0.5 pl-4 text-[0.82rem] text-brand/90">
 				<li>Open System Settings ▸ Privacy &amp; Security ▸ Full Disk Access.</li>
 				<li>Turn on <strong>MacClean</strong> (add it with “+” if it isn't listed).</li>
-				<li>Return here and run a new scan.</li>
+				<li><strong>Relaunch MacClean</strong> — macOS applies the grant only to a new launch.</li>
 			</ol>
 		</div>
 	</div>
 
 	{#snippet footer()}
 		<Button variant="ghost" onclick={() => system.refreshPermissions()}>Re-check</Button>
+		{#if !system.permissions?.fullDiskAccess}
+			<Button variant="ghost" onclick={relaunch}>Relaunch</Button>
+		{/if}
 		<Button onclick={openSettings}>Open System Settings</Button>
 	{/snippet}
 </Dialog>

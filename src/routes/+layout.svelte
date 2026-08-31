@@ -14,6 +14,25 @@
 
 	onMount(() => {
 		void system.load();
+
+		// Re-probe permissions whenever the window regains focus — catches the
+		// user returning from System Settings after granting Full Disk Access.
+		let last = 0;
+		const recheck = () => {
+			const now = Date.now();
+			if (now - last < 1500) return;
+			last = now;
+			void system.refreshPermissions();
+		};
+		const onVisible = () => {
+			if (!document.hidden) recheck();
+		};
+		window.addEventListener('focus', recheck);
+		document.addEventListener('visibilitychange', onVisible);
+		return () => {
+			window.removeEventListener('focus', recheck);
+			document.removeEventListener('visibilitychange', onVisible);
+		};
 	});
 
 	$effect(() => {

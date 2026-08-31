@@ -40,6 +40,7 @@ pub fn run() {
             commands::delete_selected,
             commands::reveal_in_finder,
             commands::open_privacy_settings,
+            commands::restart_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MacClean");
