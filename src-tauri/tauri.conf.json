@@ -1,70 +1,67 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MacClean",
-  "version": "1.0.0",
-  "identifier": "com.bkrajendra.macclean",
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../build"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "MacClean",
-        "width": 1120,
-        "height": 780,
-        "minWidth": 920,
-        "minHeight": 620,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ],
-    "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": [
-      "app",
-      "dmg"
-    ],
-    "category": "public.app-category.utilities",
-    "shortDescription": "Find and clear caches, build output and leftovers across your Mac.",
-    "longDescription": "MacClean is a native macOS utility that scans for safe-to-remove caches, build artefacts and developer leftovers, then lets you review and delete exactly what you choose. Every filesystem operation is validated by a Rust safety engine — protected system paths are never touched, and deletion is only ever permitted for items discovered in the current scan.",
-    "copyright": "© 2026 bkrajendra. MIT licensed.",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-    "macOS": {
-      "minimumSystemVersion": "11.0",
-      "entitlements": "entitlements.plist",
-      "exceptionDomain": "",
-      "signingIdentity": null,
-      "providerShortName": null,
-      "dmg": {
-        "appPosition": {
-          "x": 180,
-          "y": 220
-        },
-        "applicationFolderPosition": {
-          "x": 480,
-          "y": 220
-        },
-        "windowSize": {
-          "width": 660,
-          "height": 420
-        }
-      }
-    }
-  },
-  "plugins": {}
+	"$schema": "https://schema.tauri.app/config/2",
+	"productName": "MacClean",
+	"version": "1.0.0",
+	"identifier": "com.bkrajendra.macclean",
+	"build": {
+		"beforeDevCommand": "npm run dev",
+		"devUrl": "http://localhost:1420",
+		"beforeBuildCommand": "npm run build",
+		"frontendDist": "../build"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "MacClean",
+				"width": 1120,
+				"height": 780,
+				"minWidth": 920,
+				"minHeight": 620,
+				"titleBarStyle": "Overlay",
+				"hiddenTitle": true,
+				"resizable": true,
+				"fullscreen": false
+			}
+		],
+		"security": {
+			"csp": "default-src 'self'; img-src 'self' asset: data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": ["app", "dmg"],
+		"category": "public.app-category.utilities",
+		"shortDescription": "Find and clear caches, build output and leftovers across your Mac.",
+		"longDescription": "MacClean is a native macOS utility that scans for safe-to-remove caches, build artefacts and developer leftovers, then lets you review and delete exactly what you choose. Every filesystem operation is validated by a Rust safety engine — protected system paths are never touched, and deletion is only ever permitted for items discovered in the current scan.",
+		"copyright": "© 2026 bkrajendra. MIT licensed.",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"macOS": {
+			"minimumSystemVersion": "11.0",
+			"entitlements": "entitlements.plist",
+			"exceptionDomain": "",
+			"signingIdentity": null,
+			"providerShortName": null,
+			"dmg": {
+				"appPosition": {
+					"x": 180,
+					"y": 220
+				},
+				"applicationFolderPosition": {
+					"x": 480,
+					"y": 220
+				},
+				"windowSize": {
+					"width": 660,
+					"height": 420
+				}
+			}
+		}
+	},
+	"plugins": {}
 }
