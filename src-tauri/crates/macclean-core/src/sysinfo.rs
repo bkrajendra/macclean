@@ -69,52 +69,78 @@ fn probe(label: &str, path: std::path::PathBuf) -> Option<(PermissionProbe, bool
     ))
 }
 
-/// Best-effort guess at whether the app has Full Disk Access, by trying to read
-/// a handful of TCC-gated directories.
+/// Best-effort guess at whether the app has Full Disk Access.
+///
+/// A non-FDA process gets `EPERM` opening the user's TCC database or listing
+/// Safari / Mail / Messages data; an FDA process succeeds. **Any** one success
+/// means FDA is granted (Macs vary in which of these exist). The
+/// `com.apple.TCC` *directory* is deliberately not used — it stays unreadable
+/// even with FDA and produced a permanent false negative.
 pub fn permission_status() -> PermissionStatus {
     let home = safety::home_dir();
     let home_readable = std::fs::read_dir(&home).is_ok();
-
-    let gated: &[(&str, &str)] = &[
-        ("Safari data", "Library/Safari"),
-        ("Mail data", "Library/Mail"),
-        ("TCC database", "Library/Application Support/com.apple.TCC"),
-        ("Messages", "Library/Messages"),
-    ];
-    let ungated: &[(&str, &str)] = &[("User caches", "Library/Caches")];
-
     let mut probes = Vec::new();
-    let mut gated_seen = 0;
-    let mut gated_ok = 0;
+    let mut verdict: Option<bool> = None;
 
-    for (label, rel) in gated {
-        if let Some((p, ok)) = probe(label, home.join(rel)) {
-            gated_seen += 1;
-            if ok {
-                gated_ok += 1;
-            }
-            probes.push(p);
+    fn note(v: &mut Option<bool>, readable: bool) {
+        match v {
+            None => *v = Some(readable),
+            Some(false) if readable => *v = Some(true), // any success confirms FDA
+            _ => {}
         }
     }
-    for (label, rel) in ungated {
-        if let Some((p, _)) = probe(label, home.join(rel)) {
-            probes.push(p);
+
+    // Primary: can we open the user's TCC database file?
+    let tcc = home.join("Library/Application Support/com.apple.TCC/TCC.db");
+    match std::fs::File::open(&tcc) {
+        Ok(_) => {
+            note(&mut verdict, true);
+            probes.push(PermissionProbe {
+                label: "TCC database".into(),
+                path: safety::display_path(&tcc),
+                readable: true,
+            });
         }
+        Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {
+            note(&mut verdict, false);
+            probes.push(PermissionProbe {
+                label: "TCC database".into(),
+                path: safety::display_path(&tcc),
+                readable: false,
+            });
+        }
+        Err(_) => {} // not found / other — inconclusive, skip
+    }
+
+    // Corroborating: list well-known FDA-gated data directories.
+    for (label, rel) in [
+        ("Safari data", "Library/Safari"),
+        ("Mail data", "Library/Mail"),
+        ("Messages data", "Library/Messages"),
+    ] {
+        let path = home.join(rel);
+        if !path.exists() {
+            continue;
+        }
+        let readable = std::fs::read_dir(&path).is_ok();
+        note(&mut verdict, readable);
+        probes.push(PermissionProbe {
+            label: label.into(),
+            path: safety::display_path(&path),
+            readable,
+        });
+    }
+
+    // Context rows (not part of the verdict).
+    if let Some((p, _)) = probe("User caches", home.join("Library/Caches")) {
+        probes.push(p);
     }
     if let Some((p, _)) = probe("System caches", std::path::PathBuf::from("/Library/Caches")) {
         probes.push(p);
     }
 
-    // FDA is present if every gated dir we could see was readable (and we saw at
-    // least one). If none exist, fall back to "home readable" as a weak signal.
-    let full_disk_access = if gated_seen > 0 {
-        gated_ok == gated_seen
-    } else {
-        home_readable
-    };
-
     PermissionStatus {
-        full_disk_access,
+        full_disk_access: verdict.unwrap_or(home_readable),
         home_readable,
         probes,
     }

@@ -2142,7 +2142,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "macclean"
-version = "1.0.0"
+version = "1.0.2"
 dependencies = [
  "log",
  "macclean-core",
@@ -2157,7 +2157,7 @@ dependencies = [
 
 [[package]]
 name = "macclean-core"
-version = "1.0.0"
+version = "1.0.2"
 dependencies = [
  "dirs 5.0.1",
  "libc",
