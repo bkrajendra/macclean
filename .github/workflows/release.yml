@@ -100,7 +100,7 @@ jobs:
           ( cd "$out" && shasum -a 256 ./* | tee SHA256SUMS.txt )
           ls -lh "$out"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macclean-${{ needs.version.outputs.version }}
           path: dist-artifacts/*
