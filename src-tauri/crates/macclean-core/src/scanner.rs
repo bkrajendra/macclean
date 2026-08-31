@@ -127,7 +127,11 @@ impl<F: FnMut(ScanEvent)> ScanRun<'_, F> {
 
         let is_symlink = meta.file_type().is_symlink();
         let is_dir = !is_symlink && meta.is_dir();
-        let size = if is_dir { dir_size(path) } else { meta.len() };
+        let (size, item_count) = if is_dir {
+            dir_stats(path)
+        } else {
+            (meta.len(), 1)
+        };
 
         #[cfg(unix)]
         let (dev, ino) = (meta.dev(), meta.ino());
@@ -141,6 +145,7 @@ impl<F: FnMut(ScanEvent)> ScanRun<'_, F> {
             display_path: safety::display_path(path),
             group: rules::path_group(path),
             size_bytes: size,
+            item_count,
             is_dir,
             is_symlink,
             category,
@@ -286,17 +291,28 @@ impl<F: FnMut(ScanEvent)> ScanRun<'_, F> {
     }
 }
 
-/// Size of a directory tree: native, symlink-free byte sum. Errors contribute 0
-/// (Python `get_size` parity).
-pub fn dir_size(path: &Path) -> u64 {
-    walkdir::WalkDir::new(path)
+/// `(total_bytes, file_count)` for a directory tree: native, symlink-free.
+/// Errors contribute 0 (Python `get_size` parity).
+pub fn dir_stats(path: &Path) -> (u64, u64) {
+    let mut bytes = 0u64;
+    let mut files = 0u64;
+    for entry in walkdir::WalkDir::new(path)
         .follow_links(false)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| e.file_type().is_file())
-        .filter_map(|e| e.metadata().ok())
-        .map(|m| m.len())
-        .sum()
+    {
+        if let Ok(m) = entry.metadata() {
+            bytes += m.len();
+            files += 1;
+        }
+    }
+    (bytes, files)
+}
+
+/// Size of a directory tree (see [`dir_stats`]).
+pub fn dir_size(path: &Path) -> u64 {
+    dir_stats(path).0
 }
 
 /// Run a full scan for `options`, streaming [`ScanEvent`]s through `emit`.
@@ -310,8 +326,31 @@ pub fn scan<F: FnMut(ScanEvent)>(
     cancel: &CancelToken,
     emit: F,
 ) -> ScanReport {
+    scan_with_id(new_scan_id(), options, cancel, emit)
+}
+
+/// Like [`scan`] but with a caller-supplied scan id (so the Tauri layer can
+/// return the id before the scan thread finishes).
+pub fn scan_with_id<F: FnMut(ScanEvent)>(
+    scan_id: impl Into<String>,
+    options: &ScanOptions,
+    cancel: &CancelToken,
+    emit: F,
+) -> ScanReport {
     let roots = scope::roots(options.scope, &options.extra_roots);
-    scan_with_roots(roots, options.mode, options.scope, true, cancel, emit)
+    scan_roots_with_id(
+        scan_id,
+        roots,
+        options.mode,
+        options.scope,
+        true,
+        cancel,
+        emit,
+    )
+}
+
+pub fn new_scan_id() -> String {
+    uuid::Uuid::new_v4().simple().to_string()
 }
 
 /// Scan exactly `roots` with the recursive rules for `mode`.
@@ -326,10 +365,32 @@ pub fn scan_with_roots<F: FnMut(ScanEvent)>(
     scope_: Scope,
     include_exact_rules: bool,
     cancel: &CancelToken,
+    emit: F,
+) -> ScanReport {
+    scan_roots_with_id(
+        new_scan_id(),
+        roots,
+        mode,
+        scope_,
+        include_exact_rules,
+        cancel,
+        emit,
+    )
+}
+
+/// The scan primitive: caller-supplied id, explicit roots.
+#[allow(clippy::too_many_arguments)]
+pub fn scan_roots_with_id<F: FnMut(ScanEvent)>(
+    scan_id: impl Into<String>,
+    roots: Vec<PathBuf>,
+    mode: Mode,
+    scope_: Scope,
+    include_exact_rules: bool,
+    cancel: &CancelToken,
     mut emit: F,
 ) -> ScanReport {
     let started_at_ms = now_ms();
-    let scan_id = uuid::Uuid::new_v4().simple().to_string();
+    let scan_id = scan_id.into();
 
     emit(ScanEvent::Started {
         scan_id: scan_id.clone(),

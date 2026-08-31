@@ -139,6 +139,8 @@ pub struct ScanCandidate {
     /// `/<top-level>`.
     pub group: String,
     pub size_bytes: u64,
+    /// Number of files inside (1 for a file candidate).
+    pub item_count: u64,
     pub is_dir: bool,
     pub is_symlink: bool,
     pub category: Category,

@@ -97,19 +97,37 @@ fn map_err(e: &io::Error) -> DeleteStatus {
     }
 }
 
+/// Progress update passed to [`delete_selected_with`] after each candidate.
+pub struct DeleteProgress<'a> {
+    pub done: usize,
+    pub total: usize,
+    pub freed_bytes: u64,
+    pub last: &'a DeleteOutcome,
+}
+
 /// Validate and delete every requested candidate. The session is mutated so a
 /// successfully-deleted candidate can't be targeted twice.
 pub fn delete_selected(store: &mut SessionStore, request: &DeleteRequest) -> DeleteResult {
+    delete_selected_with(store, request, |_| {})
+}
+
+/// [`delete_selected`] with a per-item progress callback (for a live cleanup UI).
+pub fn delete_selected_with<F: FnMut(DeleteProgress)>(
+    store: &mut SessionStore,
+    request: &DeleteRequest,
+    mut on_progress: F,
+) -> DeleteResult {
     store.prune();
     if store.get(&request.scan_id).is_none() {
         return DeleteResult::invalid(&request.scan_id, &request.candidate_ids);
     }
 
-    let mut outcomes = Vec::with_capacity(request.candidate_ids.len());
+    let total = request.candidate_ids.len();
+    let mut outcomes = Vec::with_capacity(total);
     let (mut deleted_count, mut deleted_bytes, mut skipped_count, mut failed_count) =
         (0u64, 0u64, 0u64, 0u64);
 
-    for id in &request.candidate_ids {
+    for (i, id) in request.candidate_ids.iter().enumerate() {
         match store.validate_for_delete(&request.scan_id, id) {
             Ok(cand) => {
                 let outcome = delete_candidate(&cand);
@@ -147,6 +165,12 @@ pub fn delete_selected(store: &mut SessionStore, request: &DeleteRequest) -> Del
                 });
             }
         }
+        on_progress(DeleteProgress {
+            done: i + 1,
+            total,
+            freed_bytes: deleted_bytes,
+            last: outcomes.last().unwrap(),
+        });
     }
 
     DeleteResult {
@@ -204,6 +228,7 @@ mod tests {
             display_path: path.to_string_lossy().into_owned(),
             group: "g".into(),
             size_bytes: 0,
+            item_count: 1,
             is_dir: m.is_dir(),
             is_symlink: m.file_type().is_symlink(),
             category: Category::Dependencies,
