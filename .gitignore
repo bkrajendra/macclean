@@ -25,3 +25,5 @@ vite.config.ts.timestamp-*
 
 # --- Scratch ---
 *.scaffold
+/dist-artifacts
+/RELEASE_NOTES.md

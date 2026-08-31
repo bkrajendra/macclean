@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Least privilege: only the publish job needs write access.
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    name: Determine version
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.decide.outputs.release }}
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      first: ${{ steps.v.outputs.first }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: v
+        name: Compute next semantic version
+        run: node scripts/next-version.mjs
+      - id: decide
+        name: Decide whether to release
+        run: |
+          msg="$(git log -1 --pretty=%s)"
+          if [[ "$msg" == chore\(release\):* ]]; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping: head commit is a release bump."
+          elif git describe --exact-match --tags HEAD >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping: HEAD is already tagged."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build universal bundle
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+
+      - name: Stamp version ${{ needs.version.outputs.version }}
+        run: node scripts/set-version.mjs "${{ needs.version.outputs.version }}"
+
+      - name: Tests must pass before packaging
+        run: |
+          npm run test
+          cd src-tauri && cargo test --workspace
+
+      - name: Build (signs + notarises automatically when Apple secrets exist)
+        run: npm run tauri build -- --target universal-apple-darwin
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Collect artifacts
+        run: |
+          set -euo pipefail
+          v="${{ needs.version.outputs.version }}"
+          out="$GITHUB_WORKSPACE/dist-artifacts"
+          mkdir -p "$out"
+          base=src-tauri/target/universal-apple-darwin/release/bundle
+          cp "$base"/dmg/*.dmg "$out/MacClean_${v}_universal.dmg"
+          ditto -c -k --sequesterRsrc --keepParent "$base/macos/MacClean.app" "$out/MacClean_${v}_universal.app.zip"
+          ( cd "$out" && shasum -a 256 ./* | tee SHA256SUMS.txt )
+          ls -lh "$out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macclean-${{ needs.version.outputs.version }}
+          path: dist-artifacts/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Tag & GitHub Release
+    needs: [version, build]
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: macclean-${{ needs.version.outputs.version }}
+          path: dist-artifacts
+
+      - name: Regenerate release notes
+        run: node scripts/next-version.mjs
+
+      - name: Create and push tag (build already succeeded)
+        env:
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "MacClean $TAG" "${GITHUB_SHA}"
+          git push origin "$TAG"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --title "MacClean $TAG" \
+            --notes-file RELEASE_NOTES.md \
+            --target "${GITHUB_SHA}" \
+            dist-artifacts/*
+
+      - name: Commit the version bump back to main (best effort, skips CI)
+        continue-on-error: true
+        env:
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          node scripts/set-version.mjs "${{ needs.version.outputs.version }}"
+          git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml \
+                  src-tauri/crates/macclean-core/Cargo.toml
+          git commit -m "chore(release): $TAG [skip ci]" || exit 0
+          git push origin HEAD:main
