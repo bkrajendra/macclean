@@ -67,6 +67,14 @@ Updated: 2026-08-31
 
 ## Notes
 
+- **Verified on GitHub Actions** (`main` @ push): `Rust (fmt · clippy · test)`
+  green — full-workspace `cargo fmt --check` + `cargo clippy --workspace
+  --all-targets -D warnings` + `cargo test --workspace`. Frontend
+  check/lint/test/build and the Tauri build-validation job run on the same
+  workflow.
+- **Local verification**: 47 Rust tests + 38 Vitest tests green; `svelte-check`
+  and `prettier` clean; a release `tauri build` produced `MacClean.app` +
+  `MacClean_1.0.0_aarch64.dmg`.
 - **Release verification (🟡)** completes when the `release.yml` run on `main`
   publishes `v1.0.0` with `.dmg` + `.app.zip` attached. The workflow is authored,
   self-guarded against re-trigger loops, and gated on green tests + build.
