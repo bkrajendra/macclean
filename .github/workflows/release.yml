@@ -76,20 +76,26 @@ jobs:
           npm run test
           cd src-tauri && cargo test --workspace
 
-      # Signing + notarisation are opt-in: set the repository variable
-      # ENABLE_APPLE_SIGNING=true once valid Apple credentials are in Secrets.
-      # Until then the build ships ad-hoc-signed (Gatekeeper prompt on first run).
-      - name: Build (ad-hoc signed; Apple signing when ENABLE_APPLE_SIGNING=true)
+      # Signing + notarisation are opt-in. Two mutually-exclusive steps so the
+      # Apple env vars are *absent* (not just empty) for the default build —
+      # tauri-bundler treats an empty APPLE_CERTIFICATE as a real one and fails.
+
+      - name: Build (ad-hoc signed)
+        if: vars.ENABLE_APPLE_SIGNING != 'true'
+        run: npm run tauri build -- --target universal-apple-darwin
+
+      - name: Build (Developer ID signed + notarised)
+        if: vars.ENABLE_APPLE_SIGNING == 'true'
         run: npm run tauri build -- --target universal-apple-darwin
         env:
-          APPLE_CERTIFICATE: ${{ vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_ID: ${{ vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_TEAM_ID || '' }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ vars.ENABLE_TAURI_UPDATER == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ vars.ENABLE_TAURI_UPDATER == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Collect artifacts
         run: |
