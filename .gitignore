@@ -27,3 +27,4 @@ vite.config.ts.timestamp-*
 *.scaffold
 /dist-artifacts
 /RELEASE_NOTES.md
+/assets/icon-1024.png
