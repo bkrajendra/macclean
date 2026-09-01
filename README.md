@@ -18,12 +18,8 @@ No Python. No local HTTP server. No browser window. One `MacClean.app`.
 
 ## Screens
 
-| Configure                            | Scanning                             | Results                              | Cleaning                             |
-| ------------------------------------ | ------------------------------------ | ------------------------------------ | ------------------------------------ |
-| ![](docs/ui-mock-design/screen1.png) | ![](docs/ui-mock-design/screen2.png) | ![](docs/ui-mock-design/screen3.png) | ![](docs/ui-mock-design/screen5.png) |
+<img width="1123" height="787" alt="image" src="https://github.com/user-attachments/assets/647911cc-7ed7-41e7-b471-524a6d406d7d" />
 
-_(Design references — the shipped UI follows this layout with the real engine
-data.)_
 
 ---
 
@@ -180,19 +176,6 @@ See [`docs/permissions.md`](docs/permissions.md).
 - `remove_dir_all` never follows symlinks; a symlinked candidate is unlinked, not
   traversed.
 - Deletions are **permanent** — the confirmation dialog says so.
-
----
-
-## Release process
-
-Pushes to `main` run [`.github/workflows/release.yml`](.github/workflows/release.yml):
-determine the next `vX.Y.Z` from tags + Conventional Commits (no tag ⇒ `v1.0.0`),
-stamp the version, run **all** tests, `tauri build` a universal bundle, then —
-only on success — tag the commit and publish a GitHub Release with the `.dmg`,
-`.app.zip` and `SHA256SUMS`. Builds are ad‑hoc‑signed by default;
-Developer ID signing + notarisation turn on when you add the Apple secrets and
-set `ENABLE_APPLE_SIGNING=true` — see [`docs/signing.md`](docs/signing.md).
-Full pipeline: [`docs/release-process.md`](docs/release-process.md).
 
 ---
 
