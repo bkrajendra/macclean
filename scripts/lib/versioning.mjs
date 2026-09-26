@@ -82,13 +82,24 @@ export function stampVersion(version) {
 	}
 }
 
-/** The version files this repo stamps — the exact set `stampVersion` writes. */
+/** The files `stampVersion` writes directly. */
 export const VERSION_FILES = [
 	'package.json',
 	'src-tauri/tauri.conf.json',
 	'src-tauri/Cargo.toml',
 	'src-tauri/crates/macclean-core/Cargo.toml'
 ];
+
+/**
+ * `src-tauri/Cargo.lock` is not in `VERSION_FILES` — `stampVersion` never
+ * writes it directly — but it still carries its own copy of `macclean`'s and
+ * `macclean-core`'s version (Cargo keeps every `[[package]]` entry, including
+ * local workspace members, in sync with their manifest on any invocation).
+ * `post-commit.mjs` stages this too, after running `cargo check` to force
+ * that resync, so the lockfile never lags the commit that bumped the
+ * manifests — see that file for why.
+ */
+export const CARGO_LOCK_FILE = 'src-tauri/Cargo.lock';
 
 /** The current version, read from `package.json` (the same source of truth `set-version.mjs` writes first). */
 export function currentVersion() {
