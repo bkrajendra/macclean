@@ -67,13 +67,24 @@ describe('ConfirmCleanupDialog', () => {
 	it('summarises the selection and warns about permanence', () => {
 		render(ConfirmCleanupDialog, { props: { open: true, onconfirm: () => {} } });
 		expect(screen.getByText('Delete 2 items?')).toBeInTheDocument();
-		expect(screen.getByText(/permanently/i)).toBeInTheDocument();
+		expect(screen.getByText('This cannot be undone.')).toBeInTheDocument();
+		expect(screen.getAllByText(/permanently/i).length).toBeGreaterThan(0);
 		expect(screen.getByText('3.0 KB', { exact: false })).toBeInTheDocument();
 	});
 
-	it('fires onconfirm and closes on the delete button', async () => {
+	it('delete button stays disabled until the consent checkbox is checked', async () => {
 		const onconfirm = vi.fn();
 		render(ConfirmCleanupDialog, { props: { open: true, onconfirm } });
+		const deleteButton = screen.getByRole('button', { name: /delete 2 items/i });
+		expect(deleteButton).toBeDisabled();
+		await userEvent.click(deleteButton);
+		expect(onconfirm).not.toHaveBeenCalled();
+	});
+
+	it('fires onconfirm and closes once the delete button is enabled', async () => {
+		const onconfirm = vi.fn();
+		render(ConfirmCleanupDialog, { props: { open: true, onconfirm } });
+		await userEvent.click(screen.getByRole('checkbox', { name: /permanently deletes/i }));
 		await userEvent.click(screen.getByRole('button', { name: /delete 2 items/i }));
 		expect(onconfirm).toHaveBeenCalledTimes(1);
 	});

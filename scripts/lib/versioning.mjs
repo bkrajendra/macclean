@@ -67,18 +67,24 @@ export function stampVersion(version) {
 	}
 
 	function bumpJsonVersion(path) {
+		const re = /("version"\s*:\s*)"[^"]*"/;
 		const raw = fs.readFileSync(path, 'utf8');
-		const bumped = raw.replace(/("version"\s*:\s*)"[^"]*"/, `$1"${version}"`);
-		if (bumped === raw) throw new Error(`no "version" key found in ${path}`);
-		fs.writeFileSync(path, bumped);
+		// Checking the regex matched, not that the output changed: stamping the
+		// version that's already there is a legitimate no-op (the hook already
+		// stamped it; CI re-stamping the same value should succeed, not be
+		// mistaken for "no version key found").
+		if (!re.test(raw)) throw new Error(`no "version" key found in ${path}`);
+		fs.writeFileSync(path, raw.replace(re, `$1"${version}"`));
 	}
 
 	bumpJsonVersion('package.json');
 	bumpJsonVersion('src-tauri/tauri.conf.json');
 
 	for (const path of ['src-tauri/Cargo.toml', 'src-tauri/crates/macclean-core/Cargo.toml']) {
+		const re = /^version = ".*"$/m;
 		const src = fs.readFileSync(path, 'utf8');
-		fs.writeFileSync(path, src.replace(/^version = ".*"$/m, `version = "${version}"`));
+		if (!re.test(src)) throw new Error(`no "version" key found in ${path}`);
+		fs.writeFileSync(path, src.replace(re, `version = "${version}"`));
 	}
 }
 
