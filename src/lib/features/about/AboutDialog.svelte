@@ -33,6 +33,8 @@
 				</dd>
 			</dl>
 		{/if}
-		<p class="mt-2 text-xs text-faint">© 2026 bkrajendra · MIT · github.com/bkrajendra/macclean</p>
+		<p class="mt-2 text-xs text-faint">
+			© 2026 bkrajendra · Apache-2.0 · github.com/bkrajendra/macclean
+		</p>
 	</div>
 </Dialog>

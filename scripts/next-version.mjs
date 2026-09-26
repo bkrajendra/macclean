@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 /**
  * Determine the next semantic version from git tags + Conventional Commits.
+ * CI's independent check: it never trusts the version already stamped in the
+ * files (that's `scripts/git-hooks/post-commit.mjs`'s job locally) — it always
+ * recomputes from tags + commit log, using the same `scripts/lib/versioning.mjs`
+ * classifier, so a commit made without the local hook still gets a correct
+ * version at build time.
  *
  *   - No `v*.*.*` tag yet            → 1.0.0  (the first native release)
  *   - `feat!:` / `BREAKING CHANGE:`  → major
@@ -12,66 +17,41 @@
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import { classifyBump, lastTag, nextVersion } from './lib/versioning.mjs';
 
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim();
 
-function tagList() {
-	try {
-		return sh('git tag --list "v*.*.*" --sort=-v:refname').split('\n').filter(Boolean);
-	} catch {
-		return [];
-	}
-}
-
-const tags = tagList();
-const prev = tags[0] ?? null;
+const prev = lastTag();
 const first = prev === null;
-
-let version;
-let commits = [];
 
 // `releasable` = there is at least one feat / fix / perf / breaking change since
 // the last tag. A run with only chore/docs/ci/test/style/refactor commits builds
 // and tests on CI but does not cut a new version (avoids version churn).
+let commits = []; // [{ subject, body }]
+let bump = 'patch';
 let releasable = first;
 
-if (first) {
-	version = '1.0.0';
-} else {
-	const [maj, min, pat] = prev.slice(1).split('.').map(Number);
+if (!first) {
 	const raw = sh(`git log ${prev}..HEAD --no-merges --pretty=format:%s%x1f%b%x1e`);
 	commits = raw
 		.split('\x1e')
 		.map((c) => c.trim())
-		.filter(Boolean);
-
-	let bump = 'patch';
-	for (const c of commits) {
-		const subject = c.split('\x1f')[0] ?? '';
-		if (/^[a-z]+(\([^)]*\))?!:/.test(subject) || /BREAKING CHANGE/.test(c)) {
-			bump = 'major';
-			releasable = true;
-			break;
-		}
-		if (/^feat(\([^)]*\))?:/.test(subject)) {
-			bump = 'minor';
-			releasable = true;
-		}
-		if (/^(fix|perf)(\([^)]*\))?:/.test(subject)) releasable = true;
-	}
-
-	if (bump === 'major') version = `${maj + 1}.0.0`;
-	else if (bump === 'minor') version = `${maj}.${min + 1}.0`;
-	else version = `${maj}.${min}.${pat + 1}`;
+		.filter(Boolean)
+		.map((c) => {
+			const [subject, body = ''] = c.split('\x1f');
+			return { subject, body };
+		});
+	({ bump, releasable } = classifyBump(commits.map((c) => `${c.subject}\n${c.body}`)));
 }
 
+const version = nextVersion(prev, bump);
 const tag = `v${version}`;
 const date = new Date().toISOString().slice(0, 10);
 
 const changeLines = first
 	? ['- First native release: full rewrite from Python to Svelte 5 + Tauri 2 + Rust.']
 	: commits
-			.map((c) => c.split('\x1f')[0])
+			.map((c) => c.subject)
 			.filter((s) => /^(feat|fix|perf|refactor|build|docs)(\([^)]*\))?!?:/.test(s))
 			.map((s) => `- ${s}`);
 

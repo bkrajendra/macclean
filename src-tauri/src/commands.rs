@@ -327,6 +327,25 @@ fn start_keyboard_tap(_app: &AppHandle, _flag: Arc<AtomicBool>) -> Result<(), St
     Err("Clean Mode's keyboard lock is only available on macOS.".into())
 }
 
+/// Whether MacClean currently has Accessibility access, which Clean Mode's
+/// keyboard lock needs (see `keyboard_lock::is_trusted`). Lets the
+/// Permissions dialog show accurate status before the user ever tries to
+/// start Clean Mode, alongside the existing Full Disk Access readout.
+#[tauri::command]
+pub fn get_accessibility_status() -> bool {
+    accessibility_trusted()
+}
+
+#[cfg(target_os = "macos")]
+fn accessibility_trusted() -> bool {
+    crate::keyboard_lock::is_trusted()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn accessibility_trusted() -> bool {
+    true
+}
+
 /// Relaunch the app — macOS applies a new Full Disk Access grant only to a fresh
 /// process, so the permissions UI offers this after the user grants access.
 #[tauri::command]

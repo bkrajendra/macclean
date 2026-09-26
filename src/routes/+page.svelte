@@ -81,7 +81,7 @@
 	});
 </script>
 
-<div class="card mx-auto flex w-full max-w-[1800px] flex-1 flex-col p-5 sm:p-7">
+<div class="card mx-auto flex w-full max-w-[1800px] min-h-0 flex-1 flex-col p-5 sm:p-7">
 	<AppHeader>
 		{#snippet actions()}
 			<IconButton label="What MacClean cleans" onclick={() => (showRules = true)}>
@@ -102,7 +102,7 @@
 		{/snippet}
 	</AppHeader>
 
-	<div class="mt-7 flex flex-1 flex-col">
+	<div class="mt-7 flex min-h-0 flex-1 flex-col">
 		{#if scan.phase === 'idle'}
 			<DashboardView
 				{scopes}

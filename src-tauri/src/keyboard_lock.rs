@@ -25,6 +25,20 @@ extern "C" {
     fn CGEventTapEnable(tap: CFMachPortRef, enable: bool);
 }
 
+#[link(name = "ApplicationServices", kind = "framework")]
+extern "C" {
+    fn AXIsProcessTrusted() -> bool;
+}
+
+/// Whether MacClean currently has Accessibility access — the permission
+/// `spawn`'s event tap needs. A live, non-prompting check with no side
+/// effects, so the UI can show accurate status before the user ever tries to
+/// start Clean Mode (and after they grant it in System Settings, with no
+/// relaunch needed for this check itself to reflect that).
+pub fn is_trusted() -> bool {
+    unsafe { AXIsProcessTrusted() }
+}
+
 /// Spawn the tap thread and wait until the tap is installed (or failed to be).
 /// While `locked` is true every keyboard event is dropped system-wide and
 /// `on_key` gets the key's name; while false every event passes untouched.

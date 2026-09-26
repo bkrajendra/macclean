@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { TriangleAlert } from '@lucide/svelte';
+	import { ShieldAlert } from '@lucide/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import CategoryChip from '$lib/components/CategoryChip.svelte';
 	import { formatBytes, formatBytesCompact, formatCount } from '$lib/utils/format';
 	import { scan } from '$lib/stores/scan.svelte';
@@ -12,7 +13,15 @@
 	const preview = $derived(items.slice(0, 7));
 	const rest = $derived(Math.max(0, items.length - preview.length));
 
+	// Re-armed on every open so acknowledging once never carries over to the
+	// next (possibly much larger, or different) selection.
+	let acknowledged = $state(false);
+	$effect(() => {
+		if (open) acknowledged = false;
+	});
+
 	function confirm() {
+		if (!acknowledged) return;
 		open = false;
 		onconfirm();
 	}
@@ -25,13 +34,19 @@
 >
 	<div class="space-y-4">
 		<div
-			class="flex items-start gap-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:bg-rose-500/10 dark:text-rose-200"
+			class="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm text-rose-800 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-200"
 		>
-			<TriangleAlert class="mt-0.5 h-5 w-5 shrink-0 text-rose-500" />
-			<p>
-				This frees about <strong>{formatBytesCompact(scan.selectedBytes)}</strong>. Items are
-				removed <strong>permanently</strong> — they are not moved to the Trash.
-			</p>
+			<ShieldAlert class="mt-0.5 h-6 w-6 shrink-0 text-rose-500" />
+			<div class="space-y-1">
+				<p class="font-semibold">This cannot be undone.</p>
+				<p>
+					This frees about <strong>{formatBytesCompact(scan.selectedBytes)}</strong> across
+					<strong>{formatCount(scan.selectedCount)}</strong> item{scan.selectedCount === 1
+						? ''
+						: 's'}. They are deleted <strong>permanently</strong> — not moved to the Trash, and not recoverable
+					by MacClean or macOS afterward. Double-check the list below before continuing.
+				</p>
+			</div>
 		</div>
 
 		<ul class="divide-y divide-line overflow-hidden rounded-xl border border-line text-sm">
@@ -53,11 +68,23 @@
 				<li class="px-3.5 py-2 text-xs text-muted">…and {formatCount(rest)} more</li>
 			{/if}
 		</ul>
+
+		<label class="flex cursor-pointer items-start gap-2.5 rounded-xl bg-surface-3 px-3.5 py-3">
+			<Checkbox
+				checked={acknowledged}
+				onchange={(v) => (acknowledged = v)}
+				label="I understand this permanently deletes these items"
+				class="mt-0.5"
+			/>
+			<span class="text-sm text-ink">
+				I understand this <strong>permanently deletes</strong> these items and cannot be undone.
+			</span>
+		</label>
 	</div>
 
 	{#snippet footer()}
 		<Button variant="ghost" onclick={() => (open = false)}>Cancel</Button>
-		<Button variant="danger" onclick={confirm}>
+		<Button variant="danger" disabled={!acknowledged} onclick={confirm}>
 			Delete {formatCount(scan.selectedCount)} item{scan.selectedCount === 1 ? '' : 's'}
 		</Button>
 	{/snippet}

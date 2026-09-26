@@ -44,6 +44,7 @@ pub fn run() {
             commands::open_privacy_settings,
             commands::restart_app,
             commands::toggle_keyboard_lock,
+            commands::get_accessibility_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MacClean");

@@ -2,19 +2,66 @@
 
 ## Versioning
 
-Semantic versioning, tags `vMAJOR.MINOR.PATCH`.
-
-`scripts/next-version.mjs` decides the next version:
+Semantic versioning, tags `vMAJOR.MINOR.PATCH`. The bump rule (shared by every
+place that computes it — see below):
 
 | Situation | Next version |
 |-----------|--------------|
 | No `v*.*.*` tag exists yet | **`1.0.0`** — the first native release |
 | A commit since the last tag has `type!:` or `BREAKING CHANGE` | major |
 | A commit since the last tag is `feat:` | minor |
-| otherwise | patch |
+| A commit since the last tag is `fix:` / `perf:` | patch |
+| only chore/docs/style/refactor/etc since the last tag | no bump, no release |
 
-The version is stamped into `package.json`, `src-tauri/tauri.conf.json` and both
-`Cargo.toml` `[package]` sections by `scripts/set-version.mjs`.
+`scripts/lib/versioning.mjs` is the single implementation of that rule
+(`classifyBump`, `nextVersion`, `stampVersion`) — both the local git hook and
+CI import it, so they can never disagree.
+
+### Local: a `post-commit` hook folds the version into your own commit
+
+`scripts/git-hooks/post-commit.mjs` runs after every local commit (installed
+into `.git/hooks/` automatically by `scripts/install-git-hooks.mjs`, wired as
+npm's `prepare` script — so it's there right after `npm install`/`npm ci`, no
+separate setup step). It classifies every commit since the last tag —
+including the one that was just made, since by `post-commit` it's a real
+commit — computes what the next version would be, and — only if that differs
+from what's currently stamped — writes it into `package.json`,
+`src-tauri/tauri.conf.json` and both `Cargo.toml` `[package]` sections, stages
+them, and **amends them into the commit that was just made**
+(`git commit --amend --no-edit --no-verify`). A pure chore/docs commit is a
+no-op; a `feat`/`fix`/`perf`/breaking commit carries its own version bump with
+it, and its SHA changes right after `git commit` prints it — expected, the
+same as any other auto-fix-and-amend hook. The amend re-fires this hook, but
+the files already match by then, so that second pass is a no-op and it
+doesn't loop. Nothing here ever blocks a commit — any internal failure is
+logged to stderr and swallowed.
+
+It runs in `post-commit`, not `pre-commit` or `commit-msg`, for a concrete
+reason: git snapshots the tree for the commit *before* `commit-msg` runs, so
+staging files there never actually lands in the commit (found by testing —
+the hook reported success but the bump silently didn't make it into the
+commit); `pre-commit` runs even earlier and has no access to the commit
+message at all. `post-commit` is the first point where the commit genuinely
+exists, so amending it is the only point that's both correct and
+message-aware.
+
+This means the version bump ships as part of your normal commit history,
+before you ever push — there's no separate bot commit landing on `main`
+afterward, and so nothing extra to `git pull` before your next push.
+
+The hook only runs on machines that have `npm install`ed with hooks enabled;
+a commit made without it (a contributor's PR, `--no-verify`, CI's own
+checkout) simply won't have the version pre-stamped, which is fine — see
+next.
+
+### CI: independent computation, no commit back to `main`
+
+`scripts/next-version.mjs` **never trusts the files** — it always recomputes
+the next version from git tags + commit log itself, using the same
+`versioning.mjs` classifier. That's what actually decides what gets released
+and what the build gets stamped with; the local hook is a convenience that
+usually makes CI's computation a no-op against already-correct files, not a
+dependency CI relies on.
 
 ## Pipeline (`.github/workflows/release.yml`, on push to `main`)
 
@@ -22,19 +69,20 @@ The version is stamped into `package.json`, `src-tauri/tauri.conf.json` and both
 version → build → publish
 ```
 
-1. **version** (ubuntu) — compute the next version; set `release=false` if the
-   head commit is a `chore(release):` bump or `HEAD` is already tagged.
-2. **build** (macos‑14) — `set-version`, run **all** tests
-   (`npm run test` + `cargo test --workspace`), then
-   `tauri build --target universal-apple-darwin`. Packages
-   `MacClean_<v>_universal.dmg`, `MacClean_<v>_universal.app.zip`,
-   `SHA256SUMS.txt`. **No tag is pushed and no release is created if this fails.**
+1. **version** (ubuntu) — compute the next version via `next-version.mjs`;
+   set `release=false` if the head commit is a `chore(release):` bump
+   (legacy guard — CI no longer creates these) or `HEAD` is already tagged.
+2. **build** (macos‑14) — `set-version` (idempotent: a no-op if the local
+   hook already stamped it), run **all** tests (`npm run test` +
+   `cargo test --workspace`), then `tauri build --target
+   universal-apple-darwin`. Packages `MacClean_<v>_universal.dmg`,
+   `MacClean_<v>_universal.app.zip`, `SHA256SUMS.txt`. **No tag is pushed and
+   no release is created if this fails.**
 3. **publish** (ubuntu) — download artifacts, `git tag -a v<v>` on the built
    commit, `git push` the tag, `gh release create` with notes generated by
    `next-version.mjs` (version, date, architectures, install steps, changes,
-   permission requirements, known limitations). Finally a best‑effort
-   `chore(release): v<v> [skip ci]` commit bumps the version files on `main`
-   (skipped by CI; failure here does not fail the release).
+   permission requirements, known limitations). That's the last step — unlike
+   the old pipeline, nothing gets committed or pushed back to `main`.
 
 CI (`.github/workflows/ci.yml`) runs the same checks on every push and PR and
 must be green before merge.

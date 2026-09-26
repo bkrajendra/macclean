@@ -12,10 +12,18 @@
 	const perms = $derived(system.permissions);
 	const appPath = $derived(perms?.appPath ?? '');
 	const adHoc = $derived(perms?.adHocSigned ?? false);
+	const accessibility = $derived(system.accessibility);
 
 	async function openSettings() {
 		try {
 			await api.openPrivacySettings();
+		} catch (e) {
+			toasts.error('Could not open System Settings', String(e));
+		}
+	}
+	async function openAccessibilitySettings() {
+		try {
+			await api.openPrivacySettings('accessibility');
 		} catch (e) {
 			toasts.error('Could not open System Settings', String(e));
 		}
@@ -41,6 +49,19 @@
 		<div class="flex items-center justify-between rounded-xl bg-surface-3 px-4 py-3">
 			<span class="font-semibold text-ink">Full Disk Access</span>
 			{#if perms?.fullDiskAccess}
+				<span class="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
+					<Check class="h-4 w-4" /> Granted
+				</span>
+			{:else}
+				<span class="inline-flex items-center gap-1.5 font-semibold text-amber-600">
+					<X class="h-4 w-4" /> Not granted
+				</span>
+			{/if}
+		</div>
+
+		<div class="flex items-center justify-between rounded-xl bg-surface-3 px-4 py-3">
+			<span class="font-semibold text-ink">Accessibility (Clean Mode)</span>
+			{#if accessibility}
 				<span class="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
 					<Check class="h-4 w-4" /> Granted
 				</span>
@@ -109,6 +130,27 @@
 				</p>
 			{/if}
 		</div>
+
+		{#if !accessibility}
+			<div class="rounded-xl bg-brand-soft px-4 py-3 text-brand">
+				<p class="font-semibold">Grant Accessibility access (for Clean Mode)</p>
+				<p class="mt-1 text-[0.82rem] text-brand/90">
+					Separate from Full Disk Access — only needed if you use <strong>Clean Mode</strong>, the
+					system-wide keyboard lock for wiping down your keyboard. Nothing else in MacClean needs
+					it.
+				</p>
+				<ol class="mt-1.5 list-decimal space-y-0.5 pl-4 text-[0.82rem] text-brand/90">
+					<li>Open System Settings ▸ Privacy &amp; Security ▸ Accessibility.</li>
+					<li>Turn on <strong>MacClean</strong> (add it with “+” if it isn't listed).</li>
+				</ol>
+				<p class="mt-1.5 text-[0.78rem] text-brand/80">
+					Takes effect immediately — no relaunch needed, unlike Full Disk Access.
+				</p>
+				<Button variant="subtle" size="sm" class="mt-2" onclick={openAccessibilitySettings}>
+					Open Accessibility Settings
+				</Button>
+			</div>
+		{/if}
 	</div>
 
 	{#snippet footer()}

@@ -34,7 +34,7 @@
 		bind:value
 		{disabled}
 		aria-label={ariaLabel}
-		class="peer w-full appearance-none border-0 bg-transparent p-0 pr-5 text-sm font-medium text-ink focus:outline-none focus:ring-0"
+		class="peer w-full appearance-none border-0 bg-transparent bg-none p-0 pr-5 text-sm font-medium text-ink focus:outline-none focus:ring-0"
 	>
 		{#each options as opt (opt.value)}
 			<option value={opt.value}>{opt.label}</option>

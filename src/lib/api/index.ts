@@ -31,5 +31,6 @@ export const api = {
 	openPrivacySettings: (pane?: 'accessibility') => invoke<void>('open_privacy_settings', { pane }),
 	restartApp: () => invoke<void>('restart_app'),
 
-	toggleKeyboardLock: (lock: boolean) => invoke<boolean>('toggle_keyboard_lock', { lock })
+	toggleKeyboardLock: (lock: boolean) => invoke<boolean>('toggle_keyboard_lock', { lock }),
+	getAccessibilityStatus: () => invoke<boolean>('get_accessibility_status')
 };

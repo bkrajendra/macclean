@@ -163,14 +163,3 @@ jobs:
             --notes-file RELEASE_NOTES.md \
             --target "${GITHUB_SHA}" \
             dist-artifacts/*
-
-      - name: Commit the version bump back to main (best effort, skips CI)
-        continue-on-error: true
-        env:
-          TAG: ${{ needs.version.outputs.tag }}
-        run: |
-          node scripts/set-version.mjs "${{ needs.version.outputs.version }}"
-          git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml \
-                  src-tauri/crates/macclean-core/Cargo.toml
-          git commit -m "chore(release): $TAG [skip ci]" || exit 0
-          git push origin HEAD:main

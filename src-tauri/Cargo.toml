@@ -1,11 +1,11 @@
 [package]
 name = "macclean"
-version = "1.1.2"
+version = "1.1.3"
 description = "MacClean — a native macOS cleanup utility"
 authors = ["bkrajendra"]
 edition = "2021"
 rust-version = "1.77"
-license = "MIT"
+license = "Apache-2.0"
 repository = "https://github.com/bkrajendra/macclean"
 default-run = "macclean"
 
