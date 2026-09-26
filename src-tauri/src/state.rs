@@ -9,11 +9,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 /// Clean Mode's OS-level keyboard lock. `flag` is checked on every intercepted
-/// key event by the `rdev::grab` callback (see `commands::toggle_keyboard_lock`);
-/// `thread_started` tracks whether that callback's event-tap thread has been
-/// spawned yet — it is spawned once, lazily, and then lives for the app's
-/// lifetime, since `rdev` has no clean way to tear a grab down. Locking and
-/// unlocking only ever flips `flag`, never the thread.
+/// key event by the event tap (see `keyboard_lock.rs`); `thread_started`
+/// tracks whether that tap's thread has been spawned yet — it is spawned once,
+/// lazily, and then lives for the app's lifetime. Locking and unlocking only
+/// ever flip `flag`, never the thread.
 #[derive(Default)]
 pub struct KeyboardLock {
     pub flag: Arc<AtomicBool>,

@@ -1,8 +1,17 @@
+<div align="center">
+
+<img src="src-tauri/icons/128x128@2x.png" width="120" alt="MacClean icon" />
+
 # MacClean
 
 A native macOS utility that finds safe‑to‑remove **caches, build output and
 developer leftovers** across your Mac, lets you review exactly what will go, and
 deletes only what you choose.
+
+[![CI](https://github.com/bkrajendra/macclean/actions/workflows/ci.yml/badge.svg)](https://github.com/bkrajendra/macclean/actions/workflows/ci.yml)
+[![Release](https://github.com/bkrajendra/macclean/actions/workflows/release.yml/badge.svg)](https://github.com/bkrajendra/macclean/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/bkrajendra/macclean?label=release)](https://github.com/bkrajendra/macclean/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/bkrajendra/macclean)](LICENSE)
 
 Rewritten from the original Python web app into a self‑contained desktop
 application:
@@ -14,11 +23,17 @@ No Python. No local HTTP server. No browser window. One `MacClean.app`.
 > The legacy Python implementation lives on the [`legacy-python`](https://github.com/bkrajendra/macclean/tree/legacy-python)
 > branch, preserved unchanged.
 
+</div>
+
 ---
 
 ## Screens
 
+<div align="center">
+
 <img width="1123" height="787" alt="image" src="https://github.com/user-attachments/assets/647911cc-7ed7-41e7-b471-524a6d406d7d" />
+
+</div>
 
 ---
 

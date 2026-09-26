@@ -1,12 +1,11 @@
 /**
  * Clean Mode: a system-wide keyboard lock (`toggle_keyboard_lock`, backed by
- * an `rdev` event tap in Rust — see `src-tauri/src/commands.rs`) so the
+ * a CGEventTap in Rust — see `src-tauri/src/keyboard_lock.rs`) so the
  * keyboard can be wiped down without triggering keystrokes anywhere, paired
  * with a full-screen overlay whose "Exit Clean Mode" button is the only way
  * out. Mouse input is never touched by the lock, so that button always works.
  */
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { api } from '$lib/api';
 import { EVENTS } from '$lib/api/events';
 
@@ -20,7 +19,7 @@ class CleanModeStore {
 	active = $state(false);
 	pending = $state(false);
 	error = $state<string | null>(null);
-	/** The most recently swallowed key's `rdev::Key` debug name, briefly, for the keyboard-map visual. */
+	/** The most recently swallowed key's name (e.g. `KeyA`), briefly, for the keyboard-map visual. */
 	lastKey = $state<string | null>(null);
 
 	#unlisten: UnlistenFn | null = null;
@@ -39,11 +38,6 @@ class CleanModeStore {
 				if (this.#flashTimer) clearTimeout(this.#flashTimer);
 				this.#flashTimer = setTimeout(() => (this.lastKey = null), KEY_FLASH_MS);
 			});
-			try {
-				await getCurrentWindow().setFullscreen(true);
-			} catch {
-				/* best effort — the keyboard lock is what actually matters */
-			}
 		} catch (e) {
 			this.error = errorMessage(e);
 		} finally {
@@ -68,11 +62,6 @@ class CleanModeStore {
 			this.#unlisten = null;
 			if (this.#flashTimer) clearTimeout(this.#flashTimer);
 			this.lastKey = null;
-			try {
-				await getCurrentWindow().setFullscreen(false);
-			} catch {
-				/* ignore */
-			}
 		} catch (e) {
 			this.error = `Couldn't unlock — try again. (${errorMessage(e)})`;
 		} finally {

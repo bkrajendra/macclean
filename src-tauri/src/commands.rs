@@ -278,74 +278,53 @@ pub fn open_privacy_settings(app: AppHandle, pane: Option<String>) -> Result<(),
 
 /// Toggle Clean Mode's system-wide keyboard lock and return the resulting state.
 ///
-/// The first call with `lock: true` lazily spawns a dedicated OS thread that
-/// installs an `rdev::grab` event tap (macOS: a `CGEventTap`, gated on
-/// Accessibility access) and then parks there for the app's lifetime — `rdev`
-/// has no supported way to tear a tap down cleanly, so instead of starting and
-/// stopping the tap we leave it running and gate its behaviour on
-/// `state.keyboard_lock.flag`: while true the callback swallows every key
-/// event system-wide (`None`), while false it passes every event through
-/// (`Some(event)`) untouched. Mouse events are never inspected, so a mouse
-/// click always reaches the app — that's how the overlay's exit button works.
+/// The first `lock: true` installs the event tap (`keyboard_lock::spawn`),
+/// which then lives for the app's lifetime; locking and unlocking only flip
+/// `state.keyboard_lock.flag`, which the tap checks per event. Mouse and
+/// trackpad input never pass through the tap, so the overlay's exit button
+/// always works.
 ///
-/// If installing the tap fails (most likely: Accessibility access not yet
-/// granted), the spawned thread reports the error back over `tx` almost
-/// immediately — `CGEventTapCreate` fails synchronously — so we can surface a
-/// real error to the caller instead of silently doing nothing.
+/// The window goes into *simple* fullscreen, not native fullscreen: native
+/// fullscreen moves the app to its own Space, and a trackpad swipe (a Dock
+/// gesture the keyboard tap never sees) leaves that Space and the overlay
+/// behind. Simple fullscreen stays on the current desktop, and
+/// visible-on-all-workspaces + always-on-top keep the overlay in front on
+/// whichever desktop a swipe lands on.
 #[tauri::command]
 pub fn toggle_keyboard_lock(
     app: AppHandle,
     state: State<'_, AppState>,
     lock: bool,
 ) -> Result<bool, String> {
-    state.keyboard_lock.flag.store(lock, Ordering::SeqCst);
-
     if lock {
         let mut started = state.keyboard_lock.thread_started.lock().unwrap();
         if !*started {
-            let flag = state.keyboard_lock.flag.clone();
-            let (tx, rx) = std::sync::mpsc::channel::<String>();
-            std::thread::spawn(move || {
-                let result = rdev::grab(move |event| match event.event_type {
-                    rdev::EventType::KeyPress(key) => {
-                        if flag.load(Ordering::SeqCst) {
-                            let _ = app.emit(CLEAN_MODE_KEY, format!("{key:?}"));
-                            None
-                        } else {
-                            Some(event)
-                        }
-                    }
-                    rdev::EventType::KeyRelease(_) => {
-                        if flag.load(Ordering::SeqCst) {
-                            None
-                        } else {
-                            Some(event)
-                        }
-                    }
-                    _ => Some(event),
-                });
-                if let Err(err) = result {
-                    let _ = tx.send(format!("{err:?}"));
-                }
-            });
+            start_keyboard_tap(&app, state.keyboard_lock.flag.clone())?;
             *started = true;
-            drop(started);
-
-            // Tap creation failure returns near-instantly; success blocks the
-            // thread forever pumping the run loop. A short wait tells the two
-            // apart without an artificial "ready" handshake.
-            if let Ok(err) = rx.recv_timeout(Duration::from_millis(300)) {
-                state.keyboard_lock.flag.store(false, Ordering::SeqCst);
-                *state.keyboard_lock.thread_started.lock().unwrap() = false;
-                return Err(format!(
-                    "Couldn't lock the keyboard — grant Accessibility access for MacClean in \
-                     System Settings, then try again. ({err})"
-                ));
-            }
         }
     }
+    state.keyboard_lock.flag.store(lock, Ordering::SeqCst);
 
-    Ok(state.keyboard_lock.flag.load(Ordering::SeqCst))
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_simple_fullscreen(lock);
+        let _ = window.set_visible_on_all_workspaces(lock);
+        let _ = window.set_always_on_top(lock);
+    }
+
+    Ok(lock)
+}
+
+#[cfg(target_os = "macos")]
+fn start_keyboard_tap(app: &AppHandle, flag: Arc<AtomicBool>) -> Result<(), String> {
+    let app = app.clone();
+    crate::keyboard_lock::spawn(flag, move |key| {
+        let _ = app.emit(CLEAN_MODE_KEY, key);
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+fn start_keyboard_tap(_app: &AppHandle, _flag: Arc<AtomicBool>) -> Result<(), String> {
+    Err("Clean Mode's keyboard lock is only available on macOS.".into())
 }
 
 /// Relaunch the app — macOS applies a new Full Disk Access grant only to a fresh

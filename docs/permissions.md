@@ -57,8 +57,8 @@ granted. This is a best‑effort heuristic — the authoritative signal is wheth
 Clean Mode's system-wide keyboard lock (`toggle_keyboard_lock`, see
 [`docs/architecture.md`](./architecture.md#clean-mode)) is unrelated to Full
 Disk Access: it needs **Accessibility** access (*System Settings ▸ Privacy &
-Security ▸ Accessibility*) so `rdev::grab` can install a `CGEventTapCreate`
-event tap. Requested the first time Clean Mode is started; if not yet
+Security ▸ Accessibility*) so it can install an active HID-level
+`CGEventTap`. Requested the first time Clean Mode is started; if not yet
 granted, the command fails fast and the UI offers a button to
 `open_privacy_settings("accessibility")`. No Full Disk Access implication
 either way — the two permissions are independent.

@@ -93,40 +93,54 @@ from *Settings ▸ Clean Mode* or the header's keyboard-off button.
 
 1. `toggle_keyboard_lock(lock)` is Rust-owned, not frontend-owned: `AppState`
    holds a `KeyboardLock { flag: Arc<AtomicBool>, thread_started: Mutex<bool> }`.
-   The first call with `lock: true` lazily spawns a dedicated OS thread that
-   installs an `rdev::grab` event tap (macOS: a `CGEventTapCreate` placed at
-   `kCGHIDEventTap`, gated on **Accessibility** access, *not* Full Disk
-   Access) and then parks there pumping its run loop for the app's lifetime —
-   `rdev` has no supported way to tear a tap down, so instead of starting and
-   stopping it, later calls only flip `flag`. The callback swallows every
-   `KeyPress`/`KeyRelease` system-wide while `flag` is true and passes every
-   event through untouched while false; it never inspects mouse events, so a
-   mouse click always reaches the app.
-2. Being a real HID-level tap (not a webview `keydown` handler), the lock
+   The first call with `lock: true` lazily spawns a dedicated OS thread
+   (`keyboard_lock.rs`) that installs an active `CGEventTap` at
+   `kCGHIDEventTap` — gated on **Accessibility** access, *not* Full Disk
+   Access — for `KeyDown`/`KeyUp`/`FlagsChanged` only, then parks there
+   pumping its run loop for the app's lifetime. Later calls only flip `flag`:
+   while true the callback drops every keyboard event system-wide, while
+   false it passes everything through. Mouse and trackpad events are not in
+   the tap's mask at all, so a click always reaches the app.
+2. **Why not `rdev`:** the first version used `rdev::grab`, whose macOS
+   backend resolves a Unicode name for every key press via
+   `TISCopyCurrentKeyboardInputSource`/`TISGetInputSourceProperty` before the
+   user callback even runs. Those Text Input Source APIs assert they're on the
+   main dispatch queue; from the tap thread the first key press aborted the
+   app (`EXC_BREAKPOINT` in `dispatch_assert_queue`). The tap callback here
+   only reads the integer keycode (`KEYBOARD_EVENT_KEYCODE`) and maps it
+   through a static table — it must never call TIS/TSM or any other
+   main-thread-only API.
+3. If the callback is ever slow, macOS disables the tap
+   (`kCGEventTapDisabledByTimeout`), which would silently unlock the keyboard;
+   the callback re-enables it via `CGEventTapEnable` when that happens.
+4. Being a real HID-level tap (not a webview `keydown` handler), the lock
    also blocks native menu-bar accelerators system-wide — ⌘Q, ⌘Tab, ⌘H
-   included — for as long as it's on, in every app, not just MacClean's
-   window. That's the reason this went through the OS layer instead of a
-   frontend-only `preventDefault`/`stopPropagation` trap, which can only ever
-   affect events already inside the webview.
-3. Tap creation fails fast if Accessibility access hasn't been granted
-   (`CGEventTapCreate` returns null near-instantly); the spawned thread
-   reports that back over a channel with a short `recv_timeout`, so
-   `toggle_keyboard_lock` can return a real `Err` instead of silently no-op'ing.
-   The frontend surfaces it with a button to `open_privacy_settings("accessibility")`
-   (added alongside the existing Full Disk Access pane opener).
-4. Each swallowed `KeyPress` also emits `cleanMode://key` with the
-   `rdev::Key` debug name (`"KeyA"`, `"Space"`, …) so `CleanModeOverlay`'s
-   keyboard-map visual can light the physical key up — the DOM never sees
-   these keystrokes, since the tap discards them before any app, including
-   this one, receives them.
-5. If the MacClean process dies while locked, macOS tears the event tap down
+   included — in every app, not just MacClean's window. A frontend-only
+   `preventDefault` trap can only ever affect events already in the webview.
+5. **Window mode:** while locked, the window uses *simple* fullscreen
+   (`set_simple_fullscreen`), plus `set_visible_on_all_workspaces` and
+   `set_always_on_top`. Native fullscreen was the original choice and was
+   wrong: it moves the app to its own Space, and a trackpad swipe — a Dock
+   gesture the keyboard tap never sees — switches away from it, leaving the
+   overlay behind. Simple fullscreen stays on the current desktop and the
+   window joins every desktop, so a swipe lands on the overlay again.
+   Known gap: a swipe into *another app's* native-fullscreen Space still
+   shows that app (the window lacks `FullScreenAuxiliary`), though the
+   keyboard stays locked there too.
+6. Tap creation fails synchronously if Accessibility access hasn't been
+   granted; the tap thread reports success/failure over a channel, so
+   `toggle_keyboard_lock` returns a real `Err`. The frontend surfaces it with
+   a button to `open_privacy_settings("accessibility")`.
+7. Each swallowed key press emits `cleanMode://key` with the key's name
+   (`"KeyA"`, `"Space"`, …) so `CleanModeOverlay`'s keyboard-map visual can
+   light the physical key up — the DOM never sees these keystrokes.
+8. If the MacClean process dies while locked, macOS tears the event tap down
    with it (it's owned by the process), so a crash can't leave the system
-   keyboard-locked — the safety net is the OS, not application code.
-6. `lib/stores/cleanMode.svelte.ts` mirrors `active`/`pending`/`error` state
-   for the UI and best-effort toggles real window fullscreen alongside the
-   lock; `exit()` only hides the overlay after `toggle_keyboard_lock(false)`
-   actually succeeds, so a failed unlock never leaves the user without their
-   one way out (the overlay's mouse-only "Exit Clean Mode" button).
+   keyboard-locked.
+9. `lib/stores/cleanMode.svelte.ts` mirrors `active`/`pending`/`error` state
+   for the UI; `exit()` only hides the overlay after
+   `toggle_keyboard_lock(false)` succeeds, so a failed unlock never leaves the
+   user without their one way out (the overlay's mouse-only exit button).
 
 ## IPC contract
 

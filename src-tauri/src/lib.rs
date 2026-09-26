@@ -3,6 +3,8 @@
 
 mod commands;
 mod events;
+#[cfg(target_os = "macos")]
+mod keyboard_lock;
 mod state;
 
 use state::AppState;
