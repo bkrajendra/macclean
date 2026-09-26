@@ -1,6 +1,15 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { Info, KeyboardOff, ListChecks, Settings2, ShieldCheck } from '@lucide/svelte';
+	import {
+		Info,
+		KeyboardOff,
+		ListChecks,
+		Monitor,
+		Moon,
+		Settings2,
+		ShieldCheck,
+		Sun
+	} from '@lucide/svelte';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import DashboardView from '$lib/features/dashboard/DashboardView.svelte';
@@ -21,6 +30,18 @@
 	import { system } from '$lib/stores/system.svelte';
 	import { toasts } from '$lib/stores/toast.svelte';
 	import { cleanMode } from '$lib/stores/cleanMode.svelte';
+	import { theme } from '$lib/stores/theme.svelte';
+
+	const themeIcon = $derived(
+		theme.preference === 'system' ? Monitor : theme.preference === 'light' ? Sun : Moon
+	);
+	const themeLabel = $derived(
+		theme.preference === 'system'
+			? 'Theme: System (click for Light)'
+			: theme.preference === 'light'
+				? 'Theme: Light (click for Dark)'
+				: 'Theme: Dark (click for System)'
+	);
 
 	let scopes = $state<ScopeDescriptor[]>(FALLBACK_SCOPES);
 	let showConfirm = $state(false);
@@ -92,6 +113,10 @@
 			</IconButton>
 			<IconButton label="Clean Mode" onclick={startCleanMode}>
 				<KeyboardOff class="h-4 w-4" />
+			</IconButton>
+			<IconButton label={themeLabel} onclick={() => theme.cycle()}>
+				{@const ThemeIcon = themeIcon}
+				<ThemeIcon class="h-4 w-4" />
 			</IconButton>
 			<IconButton label="Scan defaults" onclick={() => (showSettings = true)}>
 				<Settings2 class="h-4 w-4" />

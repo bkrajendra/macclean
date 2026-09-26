@@ -7,11 +7,13 @@
 	import CleanModeOverlay from '$lib/features/clean-mode/CleanModeOverlay.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { system } from '$lib/stores/system.svelte';
+	import { theme } from '$lib/stores/theme.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
 	// client-only (ssr = false) — safe to read localStorage here
 	settings.hydrate();
+	theme.hydrate();
 
 	onMount(() => {
 		void system.load();
@@ -39,6 +41,10 @@
 	$effect(() => {
 		// tracks settings.mode / scope / extraRoots via persist()'s reads
 		settings.persist();
+	});
+
+	$effect(() => {
+		document.documentElement.setAttribute('data-theme', theme.effective);
 	});
 </script>
 

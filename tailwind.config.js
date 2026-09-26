@@ -3,7 +3,11 @@ import forms from '@tailwindcss/forms';
 /** @type {import('tailwindcss').Config} */
 export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
-	darkMode: 'media',
+	// Manual override via `<html data-theme="dark">` (see lib/stores/theme.svelte.ts),
+	// not just the OS preference — 'system' mode sets this attribute to match
+	// prefers-color-scheme itself, so `dark:` utilities still track the OS by
+	// default; this just adds a way to override it.
+	darkMode: ['selector', '[data-theme="dark"]'],
 	theme: {
 		extend: {
 			colors: {

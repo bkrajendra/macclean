@@ -20,8 +20,14 @@
 	color-scheme: light;
 }
 
+/*
+ * Dark values apply either from the OS preference (unless explicitly
+ * overridden to light) or from an explicit `data-theme="dark"` override —
+ * see lib/stores/theme.svelte.ts, which is the only thing that ever sets
+ * `data-theme` on <html>.
+ */
 @media (prefers-color-scheme: dark) {
-	:root {
+	:root:not([data-theme='light']) {
 		--surface: 14 13 22;
 		--surface-2: 24 22 36;
 		--surface-3: 31 28 46;
@@ -36,6 +42,22 @@
 		--danger-2: 244 63 94;
 		color-scheme: dark;
 	}
+}
+
+:root[data-theme='dark'] {
+	--surface: 14 13 22;
+	--surface-2: 24 22 36;
+	--surface-3: 31 28 46;
+	--ink: 236 234 248;
+	--muted: 165 161 193;
+	--faint: 120 116 150;
+	--line: 42 39 60;
+	--brand: 140 123 255;
+	--brand-2: 192 132 252;
+	--brand-soft: 40 34 66;
+	--danger: 251 113 133;
+	--danger-2: 244 63 94;
+	color-scheme: dark;
 }
 
 html,
