@@ -20,7 +20,6 @@ No Python. No local HTTP server. No browser window. One `MacClean.app`.
 
 <img width="1123" height="787" alt="image" src="https://github.com/user-attachments/assets/647911cc-7ed7-41e7-b471-524a6d406d7d" />
 
-
 ---
 
 ## Features
