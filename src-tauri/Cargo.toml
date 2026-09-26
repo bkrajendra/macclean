@@ -1,6 +1,6 @@
 [package]
 name = "macclean"
-version = "1.1.1"
+version = "1.1.2"
 description = "MacClean — a native macOS cleanup utility"
 authors = ["bkrajendra"]
 edition = "2021"
