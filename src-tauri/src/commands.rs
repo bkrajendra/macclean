@@ -258,16 +258,94 @@ pub fn reveal_in_finder(app: AppHandle, path: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Open System Settings ▸ Privacy & Security ▸ Full Disk Access.
+/// Open System Settings ▸ Privacy & Security, on the Full Disk Access pane by
+/// default or the Accessibility pane when `pane` is `"accessibility"` (Clean
+/// Mode's keyboard lock needs Accessibility access to install its event tap).
 #[tauri::command]
-pub fn open_privacy_settings(app: AppHandle) -> Result<(), String> {
+pub fn open_privacy_settings(app: AppHandle, pane: Option<String>) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
+    let key = match pane.as_deref() {
+        Some("accessibility") => "Privacy_Accessibility",
+        _ => "Privacy_AllFiles",
+    };
     app.opener()
         .open_url(
-            "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+            format!("x-apple.systempreferences:com.apple.preference.security?{key}"),
             None::<&str>,
         )
         .map_err(|e| e.to_string())
+}
+
+/// Toggle Clean Mode's system-wide keyboard lock and return the resulting state.
+///
+/// The first call with `lock: true` lazily spawns a dedicated OS thread that
+/// installs an `rdev::grab` event tap (macOS: a `CGEventTap`, gated on
+/// Accessibility access) and then parks there for the app's lifetime — `rdev`
+/// has no supported way to tear a tap down cleanly, so instead of starting and
+/// stopping the tap we leave it running and gate its behaviour on
+/// `state.keyboard_lock.flag`: while true the callback swallows every key
+/// event system-wide (`None`), while false it passes every event through
+/// (`Some(event)`) untouched. Mouse events are never inspected, so a mouse
+/// click always reaches the app — that's how the overlay's exit button works.
+///
+/// If installing the tap fails (most likely: Accessibility access not yet
+/// granted), the spawned thread reports the error back over `tx` almost
+/// immediately — `CGEventTapCreate` fails synchronously — so we can surface a
+/// real error to the caller instead of silently doing nothing.
+#[tauri::command]
+pub fn toggle_keyboard_lock(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    lock: bool,
+) -> Result<bool, String> {
+    state.keyboard_lock.flag.store(lock, Ordering::SeqCst);
+
+    if lock {
+        let mut started = state.keyboard_lock.thread_started.lock().unwrap();
+        if !*started {
+            let flag = state.keyboard_lock.flag.clone();
+            let (tx, rx) = std::sync::mpsc::channel::<String>();
+            std::thread::spawn(move || {
+                let result = rdev::grab(move |event| match event.event_type {
+                    rdev::EventType::KeyPress(key) => {
+                        if flag.load(Ordering::SeqCst) {
+                            let _ = app.emit(CLEAN_MODE_KEY, format!("{key:?}"));
+                            None
+                        } else {
+                            Some(event)
+                        }
+                    }
+                    rdev::EventType::KeyRelease(_) => {
+                        if flag.load(Ordering::SeqCst) {
+                            None
+                        } else {
+                            Some(event)
+                        }
+                    }
+                    _ => Some(event),
+                });
+                if let Err(err) = result {
+                    let _ = tx.send(format!("{err:?}"));
+                }
+            });
+            *started = true;
+            drop(started);
+
+            // Tap creation failure returns near-instantly; success blocks the
+            // thread forever pumping the run loop. A short wait tells the two
+            // apart without an artificial "ready" handshake.
+            if let Ok(err) = rx.recv_timeout(Duration::from_millis(300)) {
+                state.keyboard_lock.flag.store(false, Ordering::SeqCst);
+                *state.keyboard_lock.thread_started.lock().unwrap() = false;
+                return Err(format!(
+                    "Couldn't lock the keyboard — grant Accessibility access for MacClean in \
+                     System Settings, then try again. ({err})"
+                ));
+            }
+        }
+    }
+
+    Ok(state.keyboard_lock.flag.load(Ordering::SeqCst))
 }
 
 /// Relaunch the app — macOS applies a new Full Disk Access grant only to a fresh

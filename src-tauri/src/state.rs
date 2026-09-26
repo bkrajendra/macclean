@@ -8,6 +8,18 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
+/// Clean Mode's OS-level keyboard lock. `flag` is checked on every intercepted
+/// key event by the `rdev::grab` callback (see `commands::toggle_keyboard_lock`);
+/// `thread_started` tracks whether that callback's event-tap thread has been
+/// spawned yet — it is spawned once, lazily, and then lives for the app's
+/// lifetime, since `rdev` has no clean way to tear a grab down. Locking and
+/// unlocking only ever flips `flag`, never the thread.
+#[derive(Default)]
+pub struct KeyboardLock {
+    pub flag: Arc<AtomicBool>,
+    pub thread_started: Mutex<bool>,
+}
+
 /// A live scan's control surface.
 pub struct ScanHandle {
     pub cancel: CancelToken,
@@ -21,6 +33,8 @@ pub struct AppState {
     pub sessions: Mutex<SessionStore>,
     /// Scans currently in progress, keyed by scan id.
     pub scans: Mutex<HashMap<String, ScanHandle>>,
+    /// Clean Mode's system-wide keyboard lock.
+    pub keyboard_lock: KeyboardLock,
 }
 
 impl AppState {

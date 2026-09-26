@@ -20,7 +20,8 @@ export const EVENTS = {
 	scanError: 'scan://error',
 	scanCompleted: 'scan://completed',
 	cleanupProgress: 'cleanup://progress',
-	cleanupCompleted: 'cleanup://completed'
+	cleanupCompleted: 'cleanup://completed',
+	cleanModeKey: 'cleanMode://key'
 } as const;
 
 export interface ScanEventHandlers {

@@ -13,6 +13,11 @@ pub const SCAN_COMPLETED: &str = "scan://completed";
 pub const CLEANUP_PROGRESS: &str = "cleanup://progress";
 pub const CLEANUP_COMPLETED: &str = "cleanup://completed";
 
+/// Emitted for each key the Clean Mode event tap swallows, so the frontend's
+/// keyboard-map visual can light the physical key up. `key` is `rdev::Key`'s
+/// `Debug` name (e.g. `"KeyA"`, `"Space"`, `"ShiftLeft"`).
+pub const CLEAN_MODE_KEY: &str = "cleanMode://key";
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScanStartedPayload {

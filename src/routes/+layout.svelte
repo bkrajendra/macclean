@@ -4,6 +4,7 @@
 	import type { Snippet } from 'svelte';
 	import TitleBar from '$lib/components/TitleBar.svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
+	import CleanModeOverlay from '$lib/features/clean-mode/CleanModeOverlay.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { system } from '$lib/stores/system.svelte';
 
@@ -49,3 +50,4 @@
 </div>
 
 <Toaster />
+<CleanModeOverlay />

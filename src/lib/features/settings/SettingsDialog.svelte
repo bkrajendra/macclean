@@ -1,12 +1,20 @@
 <script lang="ts">
+	import { KeyboardOff, TriangleAlert } from '@lucide/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Segmented from '$lib/components/ui/Segmented.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { Mode, ScopeDescriptor } from '$lib/types/ipc';
 	import { settings } from '$lib/stores/settings.svelte';
+	import { cleanMode } from '$lib/stores/cleanMode.svelte';
+	import { api } from '$lib/api';
 
 	let { open = $bindable(false), scopes }: { open?: boolean; scopes: ScopeDescriptor[] } = $props();
+
+	async function startCleanMode() {
+		await cleanMode.enter();
+		if (cleanMode.active) open = false;
+	}
 
 	let extra = $state(settings.extraRoots.join(', '));
 
@@ -60,6 +68,40 @@
 				Comma-separated. Added on top of the scope's roots (same as
 				<code>MACCLEAN_EXTRA_SCAN_ROOTS</code>).
 			</p>
+		</div>
+
+		<div class="border-t border-line pt-5">
+			<span class="field-label">Clean Mode</span>
+			<p class="mt-1.5 text-xs text-muted">
+				Locks the keyboard system-wide so you can safely wipe it down — every keystroke is swallowed
+				until you click <em>Exit Clean Mode</em>. Requires <strong>Accessibility</strong>
+				access for MacClean in System Settings the first time it's used.
+			</p>
+			{#if cleanMode.error}
+				<p
+					class="mt-2 flex items-start gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-500 dark:text-rose-300"
+				>
+					<TriangleAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+					<span class="min-w-0 flex-1">{cleanMode.error}</span>
+				</p>
+				<Button
+					variant="ghost"
+					size="sm"
+					class="mt-2"
+					onclick={() => api.openPrivacySettings('accessibility')}
+				>
+					Open Accessibility Settings
+				</Button>
+			{/if}
+			<Button
+				variant="subtle"
+				size="sm"
+				class="mt-3"
+				loading={cleanMode.pending}
+				onclick={startCleanMode}
+			>
+				<KeyboardOff class="h-4 w-4" /> Start Clean Mode
+			</Button>
 		</div>
 	</div>
 

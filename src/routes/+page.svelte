@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { Info, ListChecks, Settings2, ShieldCheck } from '@lucide/svelte';
+	import { Info, KeyboardOff, ListChecks, Settings2, ShieldCheck } from '@lucide/svelte';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import DashboardView from '$lib/features/dashboard/DashboardView.svelte';
@@ -20,6 +20,7 @@
 	import { scan } from '$lib/stores/scan.svelte';
 	import { system } from '$lib/stores/system.svelte';
 	import { toasts } from '$lib/stores/toast.svelte';
+	import { cleanMode } from '$lib/stores/cleanMode.svelte';
 
 	let scopes = $state<ScopeDescriptor[]>(FALLBACK_SCOPES);
 	let showConfirm = $state(false);
@@ -37,6 +38,14 @@
 		}
 	});
 	onDestroy(() => void scan.dispose());
+
+	async function startCleanMode() {
+		await cleanMode.enter();
+		if (cleanMode.error) {
+			toasts.error('Could not start Clean Mode', cleanMode.error);
+			showSettings = true;
+		}
+	}
 
 	let notifiedScanId = '';
 	$effect(() => {
@@ -80,6 +89,9 @@
 			</IconButton>
 			<IconButton label="Permissions" onclick={() => (showPermissions = true)}>
 				<ShieldCheck class="h-4 w-4" />
+			</IconButton>
+			<IconButton label="Clean Mode" onclick={startCleanMode}>
+				<KeyboardOff class="h-4 w-4" />
 			</IconButton>
 			<IconButton label="Scan defaults" onclick={() => (showSettings = true)}>
 				<Settings2 class="h-4 w-4" />
