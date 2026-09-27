@@ -68,24 +68,27 @@
 				<li class="px-3.5 py-2 text-xs text-muted">…and {formatCount(rest)} more</li>
 			{/if}
 		</ul>
-
-		<label class="flex cursor-pointer items-start gap-2.5 rounded-xl bg-surface-3 px-3.5 py-3">
-			<Checkbox
-				checked={acknowledged}
-				onchange={(v) => (acknowledged = v)}
-				label="I understand this permanently deletes these items"
-				class="mt-0.5"
-			/>
-			<span class="text-sm text-ink">
-				I understand this <strong>permanently deletes</strong> these items and cannot be undone.
-			</span>
-		</label>
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" onclick={() => (open = false)}>Cancel</Button>
-		<Button variant="danger" disabled={!acknowledged} onclick={confirm}>
-			Delete {formatCount(scan.selectedCount)} item{scan.selectedCount === 1 ? '' : 's'}
-		</Button>
+		<div class="flex w-full flex-col gap-3">
+			<label class="flex cursor-pointer items-start gap-2.5 rounded-xl bg-surface-3 px-3.5 py-3">
+				<Checkbox
+					checked={acknowledged}
+					onchange={(v) => (acknowledged = v)}
+					label="I understand this permanently deletes these items"
+					class="mt-0.5"
+				/>
+				<span class="text-sm text-ink">
+					I understand this <strong>permanently deletes</strong> these items and cannot be undone.
+				</span>
+			</label>
+			<div class="flex items-center justify-end gap-3">
+				<Button variant="ghost" onclick={() => (open = false)}>Cancel</Button>
+				<Button variant="danger" disabled={!acknowledged} onclick={confirm}>
+					Delete {formatCount(scan.selectedCount)} item{scan.selectedCount === 1 ? '' : 's'}
+				</Button>
+			</div>
+		</div>
 	{/snippet}
 </Dialog>
