@@ -9,7 +9,6 @@
 		Trash2
 	} from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import StepHeading from '$lib/components/StepHeading.svelte';
 	import StatTile from '$lib/components/StatTile.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import VirtualList from '$lib/components/VirtualList.svelte';
@@ -32,34 +31,9 @@
 	);
 </script>
 
-<div class="flex h-full flex-col gap-5">
-	<StepHeading
-		complete
-		title={cancelled ? 'Scan stopped' : 'Scan complete'}
-		subtitle={empty
-			? 'Nothing to clean was found in the selected locations.'
-			: `Found ${formatCount(scan.totalCount)} items using ${formatBytesCompact(scan.totalBytes)} that can be cleaned.`}
-	>
-		{#snippet actions()}
-			<Button variant="ghost" size="sm" onclick={() => scan.reset()}>
-				<RotateCw class="h-3.5 w-3.5" /> New scan
-			</Button>
-		{/snippet}
-	</StepHeading>
-
-	{#if unreadable > 0}
-		<button
-			type="button"
-			onclick={onShowErrors}
-			class="flex items-center gap-2 self-start rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 hover:brightness-95 dark:bg-amber-500/15 dark:text-amber-300"
-		>
-			<FileWarning class="h-3.5 w-3.5" />
-			{formatCount(unreadable)} location{unreadable === 1 ? '' : 's'} couldn't be read — see details
-		</button>
-	{/if}
-
+<div class="flex h-full flex-col gap-4">
 	{#if empty}
-		<div class="card">
+		<div class="card flex flex-1 flex-col items-center justify-center gap-4">
 			<EmptyState
 				icon={Sparkles}
 				title="You're all clean here"
@@ -69,6 +43,16 @@
 					<Button onclick={() => scan.reset()}>Start a new scan</Button>
 				{/snippet}
 			</EmptyState>
+			{#if unreadable > 0}
+				<button
+					type="button"
+					onclick={onShowErrors}
+					class="flex items-center gap-2 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 hover:brightness-95 dark:bg-amber-500/15 dark:text-amber-300"
+				>
+					<FileWarning class="h-3.5 w-3.5" />
+					{formatCount(unreadable)} location{unreadable === 1 ? '' : 's'} couldn't be read — see details
+				</button>
+			{/if}
 		</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -130,15 +114,36 @@
 			</section>
 		</div>
 
-		<div class="flex flex-wrap items-center justify-between gap-4">
-			<p class="text-sm text-muted">
-				<span class="font-semibold text-ink">{formatCount(scan.selectedCount)}</span> selected ·
-				<span class="font-semibold text-ink">{formatBytesCompact(scan.selectedBytes)}</span>
-				to reclaim
-			</p>
-			<Button variant="danger" disabled={scan.selectedCount === 0} onclick={onConfirmClean}>
-				<Trash2 class="h-4 w-4" /> Clean selected
-			</Button>
+		<div class="flex flex-wrap items-end justify-between gap-3">
+			<div class="space-y-1">
+				<p class="text-sm text-muted">
+					<span class="font-semibold text-ink">{formatCount(scan.selectedCount)}</span> selected ·
+					<span class="font-semibold text-ink">{formatBytesCompact(scan.selectedBytes)}</span>
+					to reclaim
+				</p>
+				<p class="text-xs text-faint">
+					Found {formatCount(scan.totalCount)} items using {formatBytesCompact(scan.totalBytes)} that
+					can be cleaned.
+					{#if unreadable > 0}
+						·
+						<button
+							type="button"
+							onclick={onShowErrors}
+							class="text-amber-600 underline decoration-dotted underline-offset-2 hover:text-amber-700 dark:text-amber-400"
+						>
+							{formatCount(unreadable)} location{unreadable === 1 ? '' : 's'} couldn't be read
+						</button>
+					{/if}
+				</p>
+			</div>
+			<div class="flex items-center gap-2">
+				<Button variant="ghost" size="sm" onclick={() => scan.reset()}>
+					<RotateCw class="h-3.5 w-3.5" /> New scan
+				</Button>
+				<Button variant="danger" disabled={scan.selectedCount === 0} onclick={onConfirmClean}>
+					<Trash2 class="h-4 w-4" /> Clean selected
+				</Button>
+			</div>
 		</div>
 	{/if}
 </div>

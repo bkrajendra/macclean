@@ -31,6 +31,7 @@
 	import { toasts } from '$lib/stores/toast.svelte';
 	import { cleanMode } from '$lib/stores/cleanMode.svelte';
 	import { theme } from '$lib/stores/theme.svelte';
+	import { formatBytesCompact, formatCount } from '$lib/utils/format';
 
 	const themeIcon = $derived(
 		theme.preference === 'system' ? Monitor : theme.preference === 'light' ? Sun : Moon
@@ -79,6 +80,13 @@
 				toasts.warning(
 					'Scan finished with warnings',
 					`${s.permissionDeniedCount + s.errors.length} locations could not be read.`
+				);
+			} else {
+				toasts.success(
+					'Scan complete',
+					s.totalCount === 0
+						? 'Nothing to clean was found in the selected locations.'
+						: `Found ${formatCount(s.totalCount)} items using ${formatBytesCompact(s.totalBytes)} that can be cleaned.`
 				);
 			}
 			void system.refreshPermissions();
