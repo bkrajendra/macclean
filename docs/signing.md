@@ -105,8 +105,14 @@ export APPLE_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 export APPLE_ID="you@example.com"
 export APPLE_PASSWORD="xxxx-xxxx-xxxx-xxxx"
 export APPLE_TEAM_ID="AB12CD34EF"
-npm run tauri build -- --target universal-apple-darwin
+npm run tauri build -- --target universal-apple-darwin --config '{"bundle":{"createUpdaterArtifacts":false}}'
 ```
+
+The `--config` override skips producing a signed updater artifact, which
+needs the *separate* `TAURI_SIGNING_PRIVATE_KEY` from
+[auto-update](release-process.md#auto-update) — irrelevant if you're just
+testing Apple signing/notarisation locally. Drop the override (and export
+`TAURI_SIGNING_PRIVATE_KEY`/`_PASSWORD` instead) to test that too.
 
 ## Never commit
 

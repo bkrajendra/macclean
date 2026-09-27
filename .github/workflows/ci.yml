@@ -70,8 +70,11 @@ jobs:
         with:
           workspaces: src-tauri
       - run: npm install --no-audit --no-fund
+      # createUpdaterArtifacts is on in tauri.conf.json for real releases, which
+      # needs TAURI_SIGNING_PRIVATE_KEY — unavailable here for fork PRs, and
+      # beside the point anyway: this job only validates the app still builds.
       - name: Build app bundle (no dmg)
-        run: npm run tauri build -- --target aarch64-apple-darwin --bundles app
+        run: npm run tauri build -- --target aarch64-apple-darwin --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   security:
     name: Dependency audit
