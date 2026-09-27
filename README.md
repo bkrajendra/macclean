@@ -6,14 +6,16 @@
 
 A native macOS utility that finds safe‑to‑remove **caches, build output and
 developer leftovers** across your Mac, lets you review exactly what will go, and
-deletes only what you choose. Now supports **Keyboard Cleanup** mode (Allow to lock the keyboard at OS level while you safely clean your keyboard)
+deletes only what you choose. Also includes **Keyboard Cleanup** mode, which
+locks the keyboard at the OS level so you can wipe it down without stray
+keystrokes reaching your Mac.
 
 </div>
 
 > [!CAUTION]
 > MacClean **permanently deletes** files — removed items do **not** go to the
 > Trash and cannot be recovered by MacClean or macOS afterward. This is a
-> cleanup tool with real potential for accidental data loss if you're not
+> cleanup tool with real potential for accidental data loss if you are not
 > careful: always review the results list before confirming, and note that
 > every deletion requires an explicit, separate "I understand this is
 > permanent" confirmation in the app — it never deletes silently.
@@ -23,6 +25,7 @@ deletes only what you choose. Now supports **Keyboard Cleanup** mode (Allow to l
 [![CI](https://github.com/bkrajendra/macclean/actions/workflows/ci.yml/badge.svg)](https://github.com/bkrajendra/macclean/actions/workflows/ci.yml)
 [![Release](https://github.com/bkrajendra/macclean/actions/workflows/release.yml/badge.svg)](https://github.com/bkrajendra/macclean/actions/workflows/release.yml)
 [![Latest release](https://img.shields.io/github/v/release/bkrajendra/macclean?label=release)](https://github.com/bkrajendra/macclean/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/bkrajendra/macclean/total)](https://github.com/bkrajendra/macclean/releases)
 [![License: Apache-2.0](https://img.shields.io/github/license/bkrajendra/macclean)](LICENSE)
 
 Self‑contained desktop application:
@@ -64,7 +67,8 @@ Self‑contained desktop application:
   reports every location it could not read. Never runs as `root`.
 - Light **and** dark, `prefers-reduced-motion` honoured, keyboard‑operable
   dialogs.
-- **Keyboard Cleanup Mode** - Now supports Keyboard Cleanup mode (Allow to lock the keyboard at OS level while you safely clean your keyboard).
+- **Keyboard Cleanup Mode** — locks the keyboard at the OS level so you can
+  wipe it down without stray keystrokes reaching the Mac.
 
 ---
 
@@ -80,7 +84,7 @@ Self‑contained desktop application:
 1. Download `MacClean_<version>_universal.dmg` from the
    [latest release](https://github.com/bkrajendra/macclean/releases/latest).
 2. Open the DMG and drag **MacClean** into _Applications_.
-3. First launch: **right‑click ▸ Open** once (builds are not yet Apple‑notarised).
+3. Open the app — builds are notarised by Apple, so macOS won't block the first launch.
 4. For system‑level cache locations, grant **Full Disk Access**:
    _System Settings ▸ Privacy & Security ▸ Full Disk Access_ → enable **MacClean**
    → re‑scan. MacClean works without it, but _Full Mac_ scans will skip protected
@@ -184,14 +188,14 @@ MacClean asks for two **independent** macOS permissions, each gated behind its
 own toggle in _System Settings ▸ Privacy & Security_ — granting one has no
 effect on the other, and both can be revoked at any time.
 
-| Permission           | Needed for                                                                                                                                                                                        | Without it                                                                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Full Disk Access** | Reading/removing caches in TCC‑protected locations — `~/Library/Safari`, `~/Library/Mail`, `~/Library/Messages`, and (on _Full Mac_ scope) system‑wide caches under `/Library`, `/private/var/…`. | MacClean still works. Those specific locations are skipped and reported as "couldn't be read" in the results — never silently treated as cleaned.             |
-| **Accessibility**    | Only **Clean Mode** — the system‑wide keyboard lock (`toggle_keyboard_lock`) used to safely wipe down your keyboard without stray keystrokes reaching MacClean or any other app.                  | Nothing else in MacClean needs it. Clean Mode just can't engage until it's granted — the app links you straight to the right settings pane when that happens. |
+| Permission           | Needed for                                                                                                                                                                                        | Without it                                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Full Disk Access** | Reading/removing caches in TCC‑protected locations — `~/Library/Safari`, `~/Library/Mail`, `~/Library/Messages`, and (on _Full Mac_ scope) system‑wide caches under `/Library`, `/private/var/…`. | MacClean still works. Those specific locations are skipped and reported as "could not be read" in the results — never silently treated as cleaned.              |
+| **Accessibility**    | Only **Clean Mode** — the system‑wide keyboard lock (`toggle_keyboard_lock`) used to safely wipe down your keyboard without stray keystrokes reaching MacClean or any other app.                  | Nothing else in MacClean needs it. Clean Mode just cannot engage until it is granted — the app links you straight to the right settings pane when that happens. |
 
 Both are checked live and surfaced in the in‑app **Permissions** dialog (with
 one‑click links to the exact System Settings pane for each), not just at
-install time. Full details — exactly what's probed, how denials propagate
+install time. Full details — exactly what is probed, how denials propagate
 through a scan, and the signed‑vs‑ad‑hoc caveat for Full Disk Access —
 live in [`docs/permissions.md`](docs/permissions.md).
 

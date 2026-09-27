@@ -275,6 +275,7 @@
 			<a href="https://github.com/bkrajendra/macclean/blob/main/LICENSE" target="_blank" rel="noopener"
 				>Apache-2.0</a
 			>
+			<span id="downloads-stat"></span>
 		</footer>
 	</main>
 
@@ -319,6 +320,27 @@
 				</a>`;
 		}
 
+		// Counts only .dmg downloads across every release — GitHub's own
+		// per-release download_count also includes latest.json (the
+		// auto-updater silently polling for updates, not a person
+		// downloading anything) and SHA256SUMS.txt, which would inflate a
+		// "downloads" number with things that aren't downloads.
+		fetch(`https://api.github.com/repos/${REPO}/releases?per_page=100`)
+			.then((r) => (r.ok ? r.json() : []))
+			.then((releases) => {
+				const total = releases
+					.flatMap((r) => r.assets || [])
+					.filter((a) => a.name.endsWith('.dmg'))
+					.reduce((sum, a) => sum + a.download_count, 0);
+				if (total > 0) {
+					document.getElementById('downloads-stat').textContent =
+						`${total.toLocaleString()} download${total === 1 ? '' : 's'}`;
+				}
+			})
+			.catch(() => {
+				/* quiet miss — this stat isn't essential */
+			});
+
 		fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
 			.then((r) => {
 				if (!r.ok) throw new Error('release lookup failed');
@@ -329,7 +351,7 @@
 				const version = (release.tag_name || '').replace(/^v/, '');
 
 				if (!dmg) {
-					renderFallback('Latest build isn’t ready yet.');
+					renderFallback('Latest build is not ready yet.');
 					return;
 				}
 
@@ -340,20 +362,20 @@
 					</a>
 					<p class="trust">
 						<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1.5c-3 1.8-5 2.2-6.5 2.2v6c0 4.2 2.7 7.2 6.5 8.8 3.8-1.6 6.5-4.6 6.5-8.8v-6c-1.5 0-3.5-.4-6.5-2.2Zm3.4 6.3-4 4.2a.75.75 0 0 1-1.08.02L6.6 10.3a.75.75 0 1 1 1.06-1.06l1.2 1.2 3.47-3.65a.75.75 0 1 1 1.09 1.03Z" clip-rule="evenodd"/></svg>
-						Notarised by Apple
+						Open source · built on GitHub Actions
 					</p>`;
 
 				const changes = extractChanges(release.body);
 				if (changes.length) {
 					notesSlot.innerHTML = `
 						<div class="notes">
-							<h2>What’s new in v${escapeHtml(version)}</h2>
+							<h2>New in v${escapeHtml(version)}</h2>
 							<ul>${changes.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
 							<a class="full" href="${escapeHtml(release.html_url)}" target="_blank" rel="noopener">Full release notes</a>
 						</div>`;
 				}
 			})
-			.catch(() => renderFallback('Couldn’t reach GitHub right now.'));
+			.catch(() => renderFallback('Could not reach GitHub right now.'));
 	</script>
 </body>
 </html>
