@@ -66,7 +66,7 @@ Released ${date}
 ### Install
 1. Download \`MacClean_${version}_universal.dmg\`.
 2. Open it and drag **MacClean** to Applications.
-3. First launch: right-click ▸ Open (the build is not yet Apple-notarised — see below).
+3. Open the app — builds are notarised by Apple, so macOS won't block the first launch.
 4. For system-level cache locations, grant **Full Disk Access** in System Settings ▸ Privacy & Security.
 
 ### Changes
@@ -75,9 +75,9 @@ ${changeLines.length ? changeLines.join('\n') : '- Maintenance release.'}
 ### Permission requirements
 MacClean runs as a normal user app (never \`sudo\`). It asks for Full Disk Access only to reach TCC-protected cache directories; denied paths are reported, never silently skipped.
 
-### Known limitations
-- Not yet code-signed / notarised (Gatekeeper prompt on first launch). The release pipeline activates signing automatically once Apple credentials are added as repository secrets.
-- The auto-updater is scaffolded but disabled until an updater signing key is configured.
+### Updates
+MacClean checks for updates on launch and shows an **Install & Restart** option at the
+bottom of the window when one's available — no need to redownload manually.
 `;
 
 const notesFile = 'RELEASE_NOTES.md';

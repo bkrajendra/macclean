@@ -4,10 +4,12 @@
 	import type { Snippet } from 'svelte';
 	import TitleBar from '$lib/components/TitleBar.svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
+	import VersionFooter from '$lib/components/VersionFooter.svelte';
 	import CleanModeOverlay from '$lib/features/clean-mode/CleanModeOverlay.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { system } from '$lib/stores/system.svelte';
 	import { theme } from '$lib/stores/theme.svelte';
+	import { updater } from '$lib/stores/updater.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -17,6 +19,7 @@
 
 	onMount(() => {
 		void system.load();
+		void updater.checkForUpdate();
 
 		// Re-probe permissions whenever the window regains focus — catches the
 		// user returning from System Settings after granting Full Disk Access.
@@ -53,6 +56,7 @@
 	<main class="flex flex-1 flex-col overflow-y-auto px-4 pb-5 sm:px-6">
 		{@render children()}
 	</main>
+	<VersionFooter />
 </div>
 
 <Toaster />

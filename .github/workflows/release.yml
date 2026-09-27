@@ -61,6 +61,9 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -76,6 +79,11 @@ jobs:
       - name: Stamp version ${{ needs.version.outputs.version }}
         run: node scripts/set-version.mjs "${{ needs.version.outputs.version }}"
 
+      # Full history (fetched above) lets this reproduce the same notes the
+      # "Determine version" job computed, for the updater's "what's new".
+      - name: Regenerate release notes
+        run: node scripts/next-version.mjs
+
       - name: Tests must pass before packaging
         run: |
           npm run test
@@ -88,6 +96,9 @@ jobs:
       - name: Build (ad-hoc signed)
         if: vars.ENABLE_APPLE_SIGNING != 'true'
         run: npm run tauri build -- --target universal-apple-darwin
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Build (Developer ID signed + notarised)
         if: vars.ENABLE_APPLE_SIGNING == 'true'
@@ -111,6 +122,7 @@ jobs:
           base=src-tauri/target/universal-apple-darwin/release/bundle
           cp "$base"/dmg/*.dmg "$out/MacClean_${v}_universal.dmg"
           ditto -c -k --sequesterRsrc --keepParent "$base/macos/MacClean.app" "$out/MacClean_${v}_universal.app.zip"
+          node scripts/updater-manifest.mjs "$v" "$base" "$out"
           ( cd "$out" && shasum -a 256 ./* | tee SHA256SUMS.txt )
           ls -lh "$out"
 

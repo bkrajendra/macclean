@@ -15,6 +15,7 @@ use tauri_plugin_log::{Target, TargetKind};
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info)
@@ -29,6 +30,11 @@ pub fn run() {
         )
         .setup(|app| {
             app.manage(AppState::default());
+            // Not supported on mobile; this app is desktop-only anyway, but
+            // the plugin itself would fail to register on that target.
+            #[cfg(desktop)]
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
