@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MacClean</title>
+<meta name="description" content="MacClean — a native macOS utility that finds and clears caches, build output and developer leftovers." />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="app-icon.png" />
+<meta property="og:title" content="MacClean" />
+<meta property="og:description" content="Finds and clears caches, build output and developer leftovers on your Mac." />
+<meta property="og:image" content="app-icon.png" />
+<style>
+	:root {
+		--bg: #0a0916;
+		--card: #131120;
+		--card-2: #1a1730;
+		--brand-1: #7c5cfc;
+		--brand-2: #a855f7;
+		--brand-3: #f472b6;
+		--ink: #f2f0fb;
+		--muted: #a5a1c1;
+		--faint: #77739a;
+		--line: rgba(255, 255, 255, 0.09);
+		--ok: #34d399;
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	html,
+	body {
+		height: 100%;
+	}
+
+	body {
+		margin: 0;
+		min-height: 100dvh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 28px 20px;
+		background: var(--bg);
+		background-image:
+			radial-gradient(64% 46% at 50% 8%, rgb(124 92 252 / 0.28), transparent 60%),
+			radial-gradient(50% 40% at 84% 92%, rgb(244 114 182 / 0.14), transparent 60%);
+		color: var(--ink);
+		font-family:
+			-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.wordmark {
+		font-family:
+			-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', ui-rounded, system-ui, sans-serif;
+	}
+
+	a {
+		color: inherit;
+	}
+
+	.card {
+		width: 100%;
+		max-width: 460px;
+		border: 1px solid var(--line);
+		border-radius: 28px;
+		background: linear-gradient(180deg, var(--card-2), var(--card));
+		box-shadow:
+			0 40px 90px -30px rgb(0 0 0 / 0.6),
+			inset 0 1px 0 rgb(255 255 255 / 0.04);
+		padding: 40px 36px 30px;
+		opacity: 0;
+		transform: translateY(10px) scale(0.98);
+		animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.05s forwards;
+	}
+
+	@keyframes rise {
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.card {
+			animation: none;
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.head {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 14px;
+	}
+
+	.head img {
+		width: 60px;
+		height: 60px;
+		border-radius: 15px;
+		box-shadow: 0 14px 30px -12px rgb(124 92 252 / 0.65);
+	}
+
+	h1 {
+		margin: 0;
+		font-size: 1.9rem;
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		background: linear-gradient(120deg, var(--brand-1), var(--brand-2) 55%, var(--brand-3));
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+
+	.tagline {
+		margin: 0;
+		max-width: 30ch;
+		font-size: 0.95rem;
+		line-height: 1.45;
+		color: var(--muted);
+	}
+
+	.download {
+		display: block;
+		margin-top: 26px;
+		text-decoration: none;
+		border-radius: 18px;
+		padding: 16px 20px;
+		text-align: center;
+		background: linear-gradient(120deg, var(--brand-1), var(--brand-2) 55%, var(--brand-3));
+		box-shadow: 0 18px 40px -14px rgb(124 92 252 / 0.55);
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			filter 0.15s ease;
+	}
+	.download:hover {
+		filter: brightness(1.06);
+		transform: translateY(-1px);
+	}
+	.download:active {
+		transform: translateY(0);
+	}
+
+	.download .cta {
+		font-size: 1.05rem;
+		font-weight: 700;
+		color: #fff;
+	}
+	.download .meta {
+		margin-top: 3px;
+		font-size: 0.78rem;
+		color: rgb(255 255 255 / 0.85);
+	}
+
+	.trust {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		margin-top: 14px;
+		font-size: 0.78rem;
+		color: var(--faint);
+	}
+	.trust svg {
+		width: 13px;
+		height: 13px;
+		color: var(--ok);
+		flex-shrink: 0;
+	}
+
+	.notes {
+		margin-top: 28px;
+		border-top: 1px solid var(--line);
+		padding-top: 18px;
+	}
+	.notes h2 {
+		margin: 0 0 10px;
+		font-size: 0.72rem;
+		font-weight: 600;
+		color: var(--faint);
+	}
+	.notes ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+		max-height: 132px;
+		overflow-y: auto;
+	}
+	.notes li {
+		font-size: 0.84rem;
+		line-height: 1.4;
+		color: var(--muted);
+		padding-left: 14px;
+		position: relative;
+	}
+	.notes li::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0.55em;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--brand-2);
+	}
+	.notes a.full {
+		display: inline-block;
+		margin-top: 12px;
+		font-size: 0.78rem;
+		color: var(--brand-3);
+		text-decoration: none;
+	}
+	.notes a.full:hover {
+		text-decoration: underline;
+	}
+
+	.state {
+		font-size: 0.85rem;
+		color: var(--faint);
+		text-align: center;
+	}
+
+	footer {
+		margin-top: 26px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		font-size: 0.78rem;
+		color: var(--faint);
+	}
+	footer a {
+		text-decoration: none;
+	}
+	footer a:hover {
+		color: var(--muted);
+	}
+
+	@media (max-width: 420px) {
+		.card {
+			padding: 32px 24px 24px;
+			border-radius: 22px;
+		}
+	}
+</style>
+</head>
+<body>
+	<main class="card">
+		<div class="head">
+			<img src="app-icon.png" alt="" />
+			<h1 class="wordmark">MacClean</h1>
+			<p class="tagline">
+				Finds and clears caches, build output and developer leftovers — you decide what goes.
+			</p>
+		</div>
+
+		<div id="download-slot">
+			<p class="state" style="margin-top: 26px">Checking latest release…</p>
+		</div>
+
+		<div id="notes-slot"></div>
+
+		<footer>
+			<a href="https://github.com/bkrajendra/macclean" target="_blank" rel="noopener">GitHub</a>
+			<a href="https://github.com/bkrajendra/macclean/releases" target="_blank" rel="noopener"
+				>All releases</a
+			>
+			<a href="https://github.com/bkrajendra/macclean/blob/main/LICENSE" target="_blank" rel="noopener"
+				>Apache-2.0</a
+			>
+		</footer>
+	</main>
+
+	<script>
+		const REPO = 'bkrajendra/macclean';
+		const downloadSlot = document.getElementById('download-slot');
+		const notesSlot = document.getElementById('notes-slot');
+
+		function escapeHtml(s) {
+			return s.replace(
+				/[&<>"']/g,
+				(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+			);
+		}
+
+		function fmtSize(bytes) {
+			return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+		}
+
+		// Pulls just the "### Changes" bullet list out of the generated release
+		// body (see scripts/next-version.mjs) — the rest (install steps,
+		// permissions, known limitations) already lives on this page or in the
+		// app itself, so repeating it here would just be noise.
+		function extractChanges(body) {
+			if (!body) return [];
+			const match = body.match(/###\s*Changes\s*\n([\s\S]*?)(\n###|\n$|$)/i);
+			if (!match) return [];
+			return match[1]
+				.split('\n')
+				.map((l) => l.trim())
+				.filter((l) => l.startsWith('-'))
+				.map((l) => l.slice(1).trim())
+				.filter(Boolean);
+		}
+
+		function renderFallback(message) {
+			downloadSlot.innerHTML = `
+				<p class="state" style="margin-top:26px">${message}</p>
+				<a class="download" style="margin-top:14px" href="https://github.com/${REPO}/releases/latest" target="_blank" rel="noopener">
+					<span class="cta">Go to latest release</span>
+					<span class="meta">on GitHub</span>
+				</a>`;
+		}
+
+		fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
+			.then((r) => {
+				if (!r.ok) throw new Error('release lookup failed');
+				return r.json();
+			})
+			.then((release) => {
+				const dmg = (release.assets || []).find((a) => a.name.endsWith('.dmg'));
+				const version = (release.tag_name || '').replace(/^v/, '');
+
+				if (!dmg) {
+					renderFallback('Latest build isn’t ready yet.');
+					return;
+				}
+
+				downloadSlot.innerHTML = `
+					<a class="download" href="${escapeHtml(dmg.browser_download_url)}">
+						<span class="cta">Download for Mac</span>
+						<span class="meta">v${escapeHtml(version)} · ${fmtSize(dmg.size)} · Apple Silicon &amp; Intel · macOS 11+</span>
+					</a>
+					<p class="trust">
+						<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1.5c-3 1.8-5 2.2-6.5 2.2v6c0 4.2 2.7 7.2 6.5 8.8 3.8-1.6 6.5-4.6 6.5-8.8v-6c-1.5 0-3.5-.4-6.5-2.2Zm3.4 6.3-4 4.2a.75.75 0 0 1-1.08.02L6.6 10.3a.75.75 0 1 1 1.06-1.06l1.2 1.2 3.47-3.65a.75.75 0 1 1 1.09 1.03Z" clip-rule="evenodd"/></svg>
+						Notarised by Apple
+					</p>`;
+
+				const changes = extractChanges(release.body);
+				if (changes.length) {
+					notesSlot.innerHTML = `
+						<div class="notes">
+							<h2>What’s new in v${escapeHtml(version)}</h2>
+							<ul>${changes.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+							<a class="full" href="${escapeHtml(release.html_url)}" target="_blank" rel="noopener">Full release notes</a>
+						</div>`;
+				}
+			})
+			.catch(() => renderFallback('Couldn’t reach GitHub right now.'));
+	</script>
+</body>
+</html>
