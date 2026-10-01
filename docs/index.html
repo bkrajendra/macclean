@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>MacClean</title>
+<title>MacClean — clear caches and developer leftovers on your Mac</title>
 <meta name="description" content="MacClean — a native macOS utility that finds and clears caches, build output and developer leftovers." />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0a0916" />
 <link rel="icon" href="app-icon.png" />
 <meta property="og:title" content="MacClean" />
 <meta property="og:description" content="Finds and clears caches, build output and developer leftovers on your Mac." />
-<meta property="og:image" content="app-icon.png" />
+<meta property="og:image" content="screenshot1.png" />
 <style>
 	:root {
 		--bg: #0a0916;
@@ -19,35 +21,43 @@
 		--brand-3: #f472b6;
 		--ink: #f2f0fb;
 		--muted: #a5a1c1;
-		--faint: #77739a;
+		--faint: #8a86ab;
 		--line: rgba(255, 255, 255, 0.09);
 		--ok: #34d399;
+		--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+		color-scheme: dark;
 	}
 
 	* {
 		box-sizing: border-box;
 	}
 
-	html,
-	body {
-		height: 100%;
+	html {
+		background: var(--bg);
 	}
 
 	body {
 		margin: 0;
 		min-height: 100dvh;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 28px 20px;
-		background: var(--bg);
+		padding: 40px 20px 48px;
 		background-image:
 			radial-gradient(64% 46% at 50% 8%, rgb(124 92 252 / 0.28), transparent 60%),
 			radial-gradient(50% 40% at 84% 92%, rgb(244 114 182 / 0.14), transparent 60%);
+		background-repeat: no-repeat;
 		color: var(--ink);
 		font-family:
 			-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
 		-webkit-font-smoothing: antialiased;
+	}
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 36px;
+		margin: 0 auto;
+		min-height: calc(100dvh - 88px);
+		justify-content: center;
 	}
 
 	.wordmark {
@@ -59,6 +69,27 @@
 		color: inherit;
 	}
 
+	a:focus-visible,
+	button:focus-visible {
+		outline: 2px solid var(--brand-2);
+		outline-offset: 3px;
+		border-radius: 8px;
+	}
+
+	/* Entrance: one calm rise, staggered; never blocks interaction. */
+	.rise {
+		opacity: 0;
+		transform: translateY(10px);
+		animation: rise 0.45s var(--ease-out) forwards;
+		animation-delay: var(--d, 0s);
+	}
+	@keyframes rise {
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
 	.card {
 		width: 100%;
 		max-width: 460px;
@@ -68,25 +99,7 @@
 		box-shadow:
 			0 40px 90px -30px rgb(0 0 0 / 0.6),
 			inset 0 1px 0 rgb(255 255 255 / 0.04);
-		padding: 40px 36px 30px;
-		opacity: 0;
-		transform: translateY(10px) scale(0.98);
-		animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.05s forwards;
-	}
-
-	@keyframes rise {
-		to {
-			opacity: 1;
-			transform: none;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.card {
-			animation: none;
-			opacity: 1;
-			transform: none;
-		}
+		padding: 40px 36px 28px;
 	}
 
 	.head {
@@ -98,17 +111,18 @@
 	}
 
 	.head img {
-		width: 60px;
-		height: 60px;
-		border-radius: 15px;
+		width: 64px;
+		height: 64px;
+		border-radius: 16px;
 		box-shadow: 0 14px 30px -12px rgb(124 92 252 / 0.65);
 	}
 
 	h1 {
 		margin: 0;
-		font-size: 1.9rem;
+		font-size: 2rem;
 		font-weight: 800;
-		letter-spacing: -0.01em;
+		letter-spacing: -0.02em;
+		line-height: 1.1;
 		background: linear-gradient(120deg, var(--brand-1), var(--brand-2) 55%, var(--brand-3));
 		-webkit-background-clip: text;
 		background-clip: text;
@@ -117,43 +131,114 @@
 
 	.tagline {
 		margin: 0;
-		max-width: 30ch;
-		font-size: 0.95rem;
-		line-height: 1.45;
+		max-width: 32ch;
+		font-size: 0.98rem;
+		line-height: 1.5;
 		color: var(--muted);
+		text-wrap: balance;
+	}
+
+	/* ---- Download ---- */
+	.dl {
+		margin-top: 28px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
 	}
 
 	.download {
-		display: block;
-		margin-top: 26px;
-		text-decoration: none;
-		border-radius: 18px;
-		padding: 16px 20px;
-		text-align: center;
-		background: linear-gradient(120deg, var(--brand-1), var(--brand-2) 55%, var(--brand-3));
-		box-shadow: 0 18px 40px -14px rgb(124 92 252 / 0.55);
-		transition:
-			transform 0.15s ease,
-			box-shadow 0.15s ease,
-			filter 0.15s ease;
-	}
-	.download:hover {
-		filter: brightness(1.06);
-		transform: translateY(-1px);
-	}
-	.download:active {
-		transform: translateY(0);
-	}
-
-	.download .cta {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		width: 100%;
+		height: 54px;
+		border: 0;
+		border-radius: 999px;
+		font: inherit;
 		font-size: 1.05rem;
 		font-weight: 700;
+		letter-spacing: 0.005em;
 		color: #fff;
+		text-decoration: none;
+		cursor: pointer;
+		background: linear-gradient(120deg, var(--brand-1), var(--brand-2) 55%, var(--brand-3));
+		box-shadow: 0 18px 40px -14px rgb(124 92 252 / 0.6);
+		transition:
+			transform 0.16s var(--ease-out),
+			filter 0.16s var(--ease-out),
+			box-shadow 0.16s var(--ease-out);
 	}
-	.download .meta {
-		margin-top: 3px;
-		font-size: 0.78rem;
-		color: rgb(255 255 255 / 0.85);
+	.download svg {
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.download:hover {
+			filter: brightness(1.07);
+			box-shadow: 0 20px 44px -14px rgb(124 92 252 / 0.75);
+		}
+	}
+	.download:active {
+		transform: scale(0.97);
+	}
+	.download[aria-disabled='true'] {
+		pointer-events: none;
+		background: rgb(255 255 255 / 0.07);
+		box-shadow: none;
+		color: rgb(255 255 255 / 0.4);
+		position: relative;
+		overflow: hidden;
+	}
+	.download[aria-disabled='true']::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.08) 50%, transparent 70%);
+		transform: translateX(-100%);
+		animation: shimmer 1.4s linear infinite;
+	}
+	@keyframes shimmer {
+		to {
+			transform: translateX(100%);
+		}
+	}
+
+	.details {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		font-size: 0.82rem;
+		line-height: 1.4;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+		min-height: 1.15em;
+	}
+	.details .sep::before {
+		content: '·';
+		margin: 0 8px;
+		color: var(--faint);
+	}
+	.details .row {
+		display: block;
+	}
+	.details .ver {
+		color: var(--ink);
+		font-weight: 600;
+	}
+	.details.pending .row {
+		height: 0.8em;
+		width: 9em;
+		margin: 3px 0;
+		border-radius: 4px;
+		background: rgb(255 255 255 / 0.07);
+	}
+	.details.pending .row + .row {
+		width: 12em;
 	}
 
 	.trust {
@@ -161,7 +246,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
-		margin-top: 14px;
+		margin: 0;
 		font-size: 0.78rem;
 		color: var(--faint);
 	}
@@ -172,6 +257,16 @@
 		flex-shrink: 0;
 	}
 
+	.fade-in {
+		animation: fade 0.25s var(--ease-out) backwards;
+	}
+	@keyframes fade {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* ---- Release notes ---- */
 	.notes {
 		margin-top: 28px;
 		border-top: 1px solid var(--line);
@@ -179,8 +274,9 @@
 	}
 	.notes h2 {
 		margin: 0 0 10px;
-		font-size: 0.72rem;
+		font-size: 0.74rem;
 		font-weight: 600;
+		letter-spacing: 0.02em;
 		color: var(--faint);
 	}
 	.notes ul {
@@ -189,13 +285,11 @@
 		list-style: none;
 		display: flex;
 		flex-direction: column;
-		gap: 7px;
-		max-height: 132px;
-		overflow-y: auto;
+		gap: 8px;
 	}
 	.notes li {
-		font-size: 0.84rem;
-		line-height: 1.4;
+		font-size: 0.86rem;
+		line-height: 1.45;
 		color: var(--muted);
 		padding-left: 14px;
 		position: relative;
@@ -204,7 +298,7 @@
 		content: '';
 		position: absolute;
 		left: 0;
-		top: 0.55em;
+		top: 0.58em;
 		width: 5px;
 		height: 5px;
 		border-radius: 50%;
@@ -213,76 +307,136 @@
 	.notes a.full {
 		display: inline-block;
 		margin-top: 12px;
-		font-size: 0.78rem;
+		font-size: 0.8rem;
 		color: var(--brand-3);
 		text-decoration: none;
 	}
-	.notes a.full:hover {
-		text-decoration: underline;
-	}
-
-	.state {
-		font-size: 0.85rem;
-		color: var(--faint);
-		text-align: center;
+	@media (hover: hover) and (pointer: fine) {
+		.notes a.full:hover {
+			text-decoration: underline;
+		}
 	}
 
 	footer {
 		margin-top: 26px;
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: center;
-		gap: 16px;
-		font-size: 0.78rem;
+		gap: 8px 18px;
+		font-size: 0.8rem;
 		color: var(--faint);
 	}
 	footer a {
 		text-decoration: none;
+		transition: color 0.15s ease;
 	}
-	footer a:hover {
-		color: var(--muted);
+	@media (hover: hover) and (pointer: fine) {
+		footer a:hover {
+			color: var(--ink);
+		}
+	}
+
+	/* ---- Product shot ---- */
+	.shot {
+		margin: 0;
+		width: 100%;
+		max-width: 880px;
+	}
+	.shot img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border: 1px solid var(--line);
+		border-radius: 18px;
+		box-shadow: 0 50px 100px -40px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.02);
+	}
+	.shot figcaption {
+		margin-top: 12px;
+		text-align: center;
+		font-size: 0.8rem;
+		color: var(--faint);
 	}
 
 	@media (max-width: 420px) {
+		body {
+			padding: 24px 14px 36px;
+		}
 		.card {
-			padding: 32px 24px 24px;
+			padding: 32px 22px 24px;
 			border-radius: 22px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.rise {
+			animation: fade 0.2s ease backwards;
+			transform: none;
+			opacity: 1;
+		}
+		.download[aria-disabled='true']::after {
+			animation: none;
 		}
 	}
 </style>
 </head>
 <body>
-	<main class="card">
-		<div class="head">
-			<img src="app-icon.png" alt="" />
-			<h1 class="wordmark">MacClean</h1>
-			<p class="tagline">
-				Finds and clears caches, build output and developer leftovers — you decide what goes.
-			</p>
-		</div>
+	<div class="page">
+		<main class="card rise">
+			<div class="head">
+				<img src="app-icon.png" width="64" height="64" alt="" />
+				<h1 class="wordmark">MacClean</h1>
+				<p class="tagline">
+					Finds and clears caches, build output and developer leftovers — you decide what goes.
+				</p>
+			</div>
 
-		<div id="download-slot">
-			<p class="state" style="margin-top: 26px">Checking latest release…</p>
-		</div>
+			<div class="dl" id="download-slot" aria-live="polite">
+				<a class="download" aria-disabled="true" role="link" tabindex="-1">Download</a>
+				<p class="details pending" aria-label="Checking latest release">
+					<span class="row"></span><span class="row"></span>
+				</p>
+			</div>
 
-		<div id="notes-slot"></div>
+			<div id="notes-slot"></div>
 
-		<footer>
-			<a href="https://github.com/bkrajendra/macclean" target="_blank" rel="noopener">GitHub</a>
-			<a href="https://github.com/bkrajendra/macclean/releases" target="_blank" rel="noopener"
-				>All releases</a
-			>
-			<a href="https://github.com/bkrajendra/macclean/blob/main/LICENSE" target="_blank" rel="noopener"
-				>Apache-2.0</a
-			>
-			<span id="downloads-stat"></span>
-		</footer>
-	</main>
+			<footer>
+				<a href="https://github.com/bkrajendra/macclean" target="_blank" rel="noopener">GitHub</a>
+				<a href="https://github.com/bkrajendra/macclean/releases" target="_blank" rel="noopener"
+					>All releases</a
+				>
+				<a
+					href="https://github.com/bkrajendra/macclean/blob/main/LICENSE"
+					target="_blank"
+					rel="noopener"
+					>Apache-2.0</a
+				>
+				<span id="downloads-stat"></span>
+			</footer>
+		</main>
+
+		<figure class="shot rise" style="--d: 0.12s">
+			<img
+				src="screenshot1.png"
+				width="2241"
+				height="1563"
+				alt="MacClean scanning a Mac: categories found so far, items found, folders scanned and reclaimable space."
+				decoding="async"
+			/>
+			<figcaption>See exactly what's found before anything is deleted.</figcaption>
+		</figure>
+	</div>
 
 	<script>
 		const REPO = 'bkrajendra/macclean';
 		const downloadSlot = document.getElementById('download-slot');
 		const notesSlot = document.getElementById('notes-slot');
+		const MAX_NOTES = 5;
+
+		const ICON_DOWNLOAD =
+			'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4L6 9M4 16h12"/></svg>';
+		const ICON_SHIELD =
+			'<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1.5c-3 1.8-5 2.2-6.5 2.2v6c0 4.2 2.7 7.2 6.5 8.8 3.8-1.6 6.5-4.6 6.5-8.8v-6c-1.5 0-3.5-.4-6.5-2.2Zm3.4 6.3-4 4.2a.75.75 0 0 1-1.08.02L6.6 10.3a.75.75 0 1 1 1.06-1.06l1.2 1.2 3.47-3.65a.75.75 0 1 1 1.09 1.03Z" clip-rule="evenodd"/></svg>';
 
 		function escapeHtml(s) {
 			return s.replace(
@@ -313,11 +467,8 @@
 
 		function renderFallback(message) {
 			downloadSlot.innerHTML = `
-				<p class="state" style="margin-top:26px">${message}</p>
-				<a class="download" style="margin-top:14px" href="https://github.com/${REPO}/releases/latest" target="_blank" rel="noopener">
-					<span class="cta">Go to latest release</span>
-					<span class="meta">on GitHub</span>
-				</a>`;
+				<a class="download fade-in" href="https://github.com/${REPO}/releases/latest" target="_blank" rel="noopener">${ICON_DOWNLOAD}Download</a>
+				<p class="details fade-in"><span class="row">${escapeHtml(message)}</span><span class="row">Opens the latest release on GitHub</span></p>`;
 		}
 
 		// Counts only .dmg downloads across every release — GitHub's own
@@ -333,8 +484,9 @@
 					.filter((a) => a.name.endsWith('.dmg'))
 					.reduce((sum, a) => sum + a.download_count, 0);
 				if (total > 0) {
-					document.getElementById('downloads-stat').textContent =
-						`${total.toLocaleString()} download${total === 1 ? '' : 's'}`;
+					const el = document.getElementById('downloads-stat');
+					el.textContent = `${total.toLocaleString()} download${total === 1 ? '' : 's'}`;
+					el.classList.add('fade-in');
 				}
 			})
 			.catch(() => {
@@ -351,31 +503,31 @@
 				const version = (release.tag_name || '').replace(/^v/, '');
 
 				if (!dmg) {
-					renderFallback('Latest build is not ready yet.');
+					renderFallback('Latest build is not ready yet');
 					return;
 				}
 
 				downloadSlot.innerHTML = `
-					<a class="download" href="${escapeHtml(dmg.browser_download_url)}">
-						<span class="cta">Download for Mac</span>
-						<span class="meta">v${escapeHtml(version)} · ${fmtSize(dmg.size)} · Apple Silicon &amp; Intel · macOS 11+</span>
-					</a>
-					<p class="trust">
-						<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1.5c-3 1.8-5 2.2-6.5 2.2v6c0 4.2 2.7 7.2 6.5 8.8 3.8-1.6 6.5-4.6 6.5-8.8v-6c-1.5 0-3.5-.4-6.5-2.2Zm3.4 6.3-4 4.2a.75.75 0 0 1-1.08.02L6.6 10.3a.75.75 0 1 1 1.06-1.06l1.2 1.2 3.47-3.65a.75.75 0 1 1 1.09 1.03Z" clip-rule="evenodd"/></svg>
-						Open source · built on GitHub Actions
-					</p>`;
+					<a class="download fade-in" href="${escapeHtml(dmg.browser_download_url)}">${ICON_DOWNLOAD}Download</a>
+					<p class="details fade-in">
+						<span class="row"><span class="ver">v${escapeHtml(version)}</span><span class="sep">${fmtSize(dmg.size)}</span></span>
+						<span class="row"><span>Apple Silicon &amp; Intel</span><span class="sep">macOS 11+</span></span>
+					</p>
+					<p class="trust fade-in">${ICON_SHIELD}Open source · built on GitHub Actions</p>`;
 
 				const changes = extractChanges(release.body);
 				if (changes.length) {
+					const shown = changes.slice(0, MAX_NOTES);
+					const more = changes.length - shown.length;
 					notesSlot.innerHTML = `
-						<div class="notes">
+						<div class="notes fade-in">
 							<h2>New in v${escapeHtml(version)}</h2>
-							<ul>${changes.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
-							<a class="full" href="${escapeHtml(release.html_url)}" target="_blank" rel="noopener">Full release notes</a>
+							<ul>${shown.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+							<a class="full" href="${escapeHtml(release.html_url)}" target="_blank" rel="noopener">${more > 0 ? `+${more} more · ` : ''}Full release notes</a>
 						</div>`;
 				}
 			})
-			.catch(() => renderFallback('Could not reach GitHub right now.'));
+			.catch(() => renderFallback('Could not reach GitHub right now'));
 	</script>
 </body>
 </html>

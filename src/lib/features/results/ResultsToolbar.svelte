@@ -43,7 +43,7 @@
 			type="search"
 			placeholder="Search path or label"
 			bind:value={scan.search}
-			class="h-9 w-52 rounded-xl border border-line bg-surface-2 pl-9 pr-3 text-sm text-ink placeholder:text-faint focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/25"
+			class="h-9 w-52 rounded-xl transition border border-line bg-surface-2 pl-9 pr-3 text-sm text-ink placeholder:text-faint focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/25"
 		/>
 	</label>
 

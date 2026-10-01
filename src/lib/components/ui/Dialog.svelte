@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import { cn } from '$lib/utils/cn';
+	import { easeOut, pop } from '$lib/utils/motion';
 
 	let {
 		open = $bindable(false),
@@ -44,18 +46,19 @@
 			type="button"
 			aria-label="Close"
 			tabindex="-1"
-			class="absolute inset-0 animate-fade-in bg-ink/25 backdrop-blur-[3px] dark:bg-black/50"
+			class="absolute inset-0 bg-ink/25 backdrop-blur-[3px] dark:bg-black/50"
+			in:fade={{ duration: 160, easing: easeOut }}
+			out:fade={{ duration: 120, easing: easeOut }}
 			onclick={close}
 		></button>
 
 		<div
+			in:pop={{ start: 0.96, y: 6, duration: 200 }}
+			out:pop={{ start: 0.98, duration: 120 }}
 			role="dialog"
 			aria-modal="true"
 			aria-label={title}
-			class={cn(
-				'card relative w-full animate-scale-in overflow-hidden p-0 shadow-pop',
-				widths[size]
-			)}
+			class={cn('card relative w-full overflow-hidden p-0 shadow-pop', widths[size])}
 		>
 			<header class="flex items-start justify-between gap-4 border-b border-line px-6 pb-4 pt-5">
 				<div class="min-w-0">
@@ -68,7 +71,7 @@
 					<button
 						type="button"
 						aria-label="Close"
-						class="-mr-1 -mt-1 grid h-8 w-8 place-items-center rounded-lg text-muted transition hover:bg-surface-3 hover:text-ink"
+						class="-mr-1 -mt-1 grid h-8 w-8 place-items-center rounded-lg text-muted transition hover:bg-surface-3 hover:text-ink active:scale-95"
 						onclick={close}
 					>
 						<X class="h-4 w-4" />

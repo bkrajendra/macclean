@@ -2,6 +2,7 @@ import forms from '@tailwindcss/forms';
 
 /** @type {import('tailwindcss').Config} */
 export default {
+	future: { hoverOnlyWhenSupported: true },
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	// Manual override via `<html data-theme="dark">` (see lib/stores/theme.svelte.ts),
 	// not just the OS preference — 'system' mode sets this attribute to match
@@ -46,6 +47,10 @@ export default {
 				],
 				mono: ['ui-monospace', '"SF Mono"', '"JetBrains Mono"', 'Menlo', 'monospace']
 			},
+			transitionTimingFunction: {
+				out: 'var(--ease-out)',
+				'in-out': 'var(--ease-in-out)'
+			},
 			borderRadius: {
 				xl2: '1.25rem',
 				xl3: '1.75rem'
@@ -65,6 +70,10 @@ export default {
 					from: { opacity: '0', transform: 'translateY(8px)' },
 					to: { opacity: '1', transform: 'translateY(0)' }
 				},
+				'pop-in': {
+					from: { opacity: '0', transform: 'scale(0.6)' },
+					to: { opacity: '1', transform: 'scale(1)' }
+				},
 				orbit: { to: { transform: 'rotate(360deg)' } },
 				'pulse-ring': {
 					'0%': { transform: 'scale(0.6)', opacity: '0.8' },
@@ -72,9 +81,11 @@ export default {
 				}
 			},
 			animation: {
-				'fade-in': 'fade-in 0.2s ease-out',
-				'scale-in': 'scale-in 0.16s cubic-bezier(0.2, 1.2, 0.4, 1)',
-				'slide-up': 'slide-up 0.24s ease-out',
+				'fade-in': 'fade-in 0.18s var(--ease-out)',
+				'scale-in': 'scale-in 0.2s var(--ease-out)',
+				'slide-up': 'slide-up 0.22s var(--ease-out)',
+				'screen-in': 'slide-up 0.22s var(--ease-out)',
+				'pop-in': 'pop-in 0.28s var(--ease-out) backwards',
 				orbit: 'orbit 22s linear infinite',
 				'orbit-rev': 'orbit 30s linear infinite reverse',
 				'pulse-ring': 'pulse-ring 2.4s ease-out infinite'

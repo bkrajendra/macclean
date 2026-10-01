@@ -53,39 +53,43 @@
 	);
 </script>
 
-<div class="animate-fade-in space-y-7">
+<div class="flex h-full min-h-0 animate-screen-in flex-col">
 	<StepHeading
 		title="Scanning your Mac"
 		subtitle="Looking through the selected locations for unnecessary files…"
 	/>
 
-	<OrbitField items={orbitItems}>
-		{#snippet ring()}
-			<CircularProgress size={240} progress={null}>
-				<div class="flex flex-col items-center">
-					<Radar class="mb-1 h-7 w-7 text-brand motion-safe:animate-pulse" />
-					<p class="font-display text-xl font-extrabold text-ink">Scanning…</p>
-					<p class="text-xs text-muted">Analysing your system</p>
-					<p class="mt-1 font-display text-2xl font-extrabold text-gradient-brand">
-						{formatCount(scan.progress?.itemsFound ?? scan.candidates.length)}
-					</p>
-					<p class="text-[0.7rem] uppercase tracking-wide text-faint">items found</p>
-				</div>
-			</CircularProgress>
-		{/snippet}
-	</OrbitField>
+	<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
+		<div class="my-auto flex flex-col items-center gap-7 py-4">
+			<OrbitField items={orbitItems}>
+				{#snippet ring()}
+					<CircularProgress size={240} progress={null}>
+						<div class="flex flex-col items-center">
+							<Radar class="mb-1 h-7 w-7 text-brand motion-safe:animate-pulse" />
+							<p class="font-display text-xl font-extrabold text-ink">Scanning…</p>
+							<p class="text-xs text-muted">Analysing your system</p>
+							<p class="mt-1 font-display text-2xl font-extrabold tabular-nums text-gradient-brand">
+								{formatCount(scan.progress?.itemsFound ?? scan.candidates.length)}
+							</p>
+							<p class="text-[0.7rem] uppercase tracking-wide text-faint">items found</p>
+						</div>
+					</CircularProgress>
+				{/snippet}
+			</OrbitField>
 
-	<div class="flex flex-col items-center gap-3">
-		<p class="max-w-full truncate text-sm">
-			<span class="font-semibold text-brand">Scanning:</span>
-			<span class="font-mono text-muted">{currentDir || '…'}</span>
-		</p>
-		<Button variant="ghost" onclick={() => scan.cancel()} loading={scan.cancelling}>
-			{scan.cancelling ? 'Stopping…' : 'Stop scan'}
-		</Button>
+			<div class="flex flex-col items-center gap-3">
+				<p class="max-w-full truncate text-sm">
+					<span class="font-semibold text-brand">Scanning:</span>
+					<span class="font-mono text-muted">{currentDir || '…'}</span>
+				</p>
+				<Button variant="ghost" onclick={() => scan.cancel()} loading={scan.cancelling}>
+					{scan.cancelling ? 'Stopping…' : 'Stop scan'}
+				</Button>
+			</div>
+		</div>
 	</div>
 
-	<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+	<div class="grid shrink-0 gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-4">
 		<StatTile
 			icon={FolderSearch}
 			label="Folders scanned"

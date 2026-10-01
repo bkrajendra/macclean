@@ -30,7 +30,9 @@
 		width={size}
 		height={size}
 		viewBox="0 0 {size} {size}"
-		class={progress === null ? 'motion-safe:animate-[orbit_1.4s_linear_infinite]' : ''}
+		class={progress === null
+			? 'motion-safe:animate-[orbit_1.4s_linear_infinite] motion-reduce:animate-pulse'
+			: ''}
 	>
 		<defs>
 			<linearGradient id={uid} x1="0%" y1="0%" x2="100%" y2="100%">

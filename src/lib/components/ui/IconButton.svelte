@@ -17,7 +17,7 @@
 	aria-label={label}
 	title={label}
 	class={cn(
-		'no-drag inline-grid h-8 w-8 place-items-center rounded-lg text-muted transition hover:bg-surface-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50',
+		'no-drag inline-grid h-8 w-8 place-items-center rounded-lg text-muted transition active:scale-95 hover:bg-surface-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50',
 		klass
 	)}
 >

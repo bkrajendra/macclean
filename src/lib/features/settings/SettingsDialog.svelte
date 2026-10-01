@@ -7,6 +7,8 @@
 	import type { Mode, ScopeDescriptor } from '$lib/types/ipc';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { cleanMode } from '$lib/stores/cleanMode.svelte';
+	import { slide } from 'svelte/transition';
+	import { easeOut } from '$lib/utils/motion';
 	import { api } from '$lib/api';
 
 	let { open = $bindable(false), scopes }: { open?: boolean; scopes: ScopeDescriptor[] } = $props();
@@ -60,7 +62,7 @@
 		<div>
 			<span class="field-label">Extra folders to scan</span>
 			<input
-				class="w-full rounded-xl border border-line bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/25"
+				class="w-full rounded-xl transition border border-line bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/25"
 				placeholder="~/work/scratch, /Volumes/Build/cache"
 				bind:value={extra}
 			/>
@@ -78,20 +80,22 @@
 				access for MacClean in System Settings the first time it's used.
 			</p>
 			{#if cleanMode.error}
-				<p
-					class="mt-2 flex items-start gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-500 dark:text-rose-300"
-				>
-					<TriangleAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" />
-					<span class="min-w-0 flex-1">{cleanMode.error}</span>
-				</p>
-				<Button
-					variant="ghost"
-					size="sm"
-					class="mt-2"
-					onclick={() => api.openPrivacySettings('accessibility')}
-				>
-					Open Accessibility Settings
-				</Button>
+				<div transition:slide={{ duration: 200, easing: easeOut }}>
+					<p
+						class="mt-2 flex items-start gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-500 dark:text-rose-300"
+					>
+						<TriangleAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+						<span class="min-w-0 flex-1">{cleanMode.error}</span>
+					</p>
+					<Button
+						variant="ghost"
+						size="sm"
+						class="mt-2"
+						onclick={() => api.openPrivacySettings('accessibility')}
+					>
+						Open Accessibility Settings
+					</Button>
+				</div>
 			{/if}
 			<Button
 				variant="subtle"

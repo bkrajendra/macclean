@@ -31,7 +31,7 @@
 	);
 </script>
 
-<div class="flex h-full flex-col gap-4">
+<div class="flex h-full animate-screen-in flex-col gap-4">
 	{#if empty}
 		<div class="card flex flex-1 flex-col items-center justify-center gap-4">
 			<EmptyState

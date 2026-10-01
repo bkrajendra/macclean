@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Check, LoaderCircle, type LucideIcon } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
+	import { pop } from '$lib/utils/motion';
 
 	export interface OrbitItem {
 		label: string;
@@ -49,9 +50,12 @@
 		</g>
 	</svg>
 
-	{#snippet chip(item: OrbitItem, align: 'left' | 'right')}
+	{#snippet chip(item: OrbitItem, align: 'left' | 'right', i: number)}
 		{@const Icon = item.icon}
-		<li class="flex items-center gap-3 {align === 'right' ? 'flex-row-reverse text-right' : ''}">
+		<li
+			in:pop|global={{ start: 0.94, y: 6, duration: 240, delay: 60 + i * 50 }}
+			class="flex items-center gap-3 {align === 'right' ? 'flex-row-reverse text-right' : ''}"
+		>
 			<span
 				class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-line bg-surface-2 text-brand shadow-tile"
 			>
@@ -72,12 +76,12 @@
 	{/snippet}
 
 	<ul class="relative z-10 flex w-44 flex-col gap-7 sm:w-52">
-		{#each left as item (item.label)}{@render chip(item, 'left')}{/each}
+		{#each left as item, i (item.label)}{@render chip(item, 'left', i)}{/each}
 	</ul>
 
 	<div class="relative z-10 shrink-0">{@render ring()}</div>
 
 	<ul class="relative z-10 flex w-44 flex-col items-end gap-7 sm:w-52">
-		{#each right as item (item.label)}{@render chip(item, 'right')}{/each}
+		{#each right as item, i (item.label)}{@render chip(item, 'right', mid + i)}{/each}
 	</ul>
 </div>

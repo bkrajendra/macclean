@@ -7,6 +7,8 @@
 <script lang="ts">
 	import { RotateCw, ShieldAlert, X } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { slide } from 'svelte/transition';
+	import { easeOut } from '$lib/utils/motion';
 	import { api } from '$lib/api';
 	import type { Scope } from '$lib/types/ipc';
 	import { system } from '$lib/stores/system.svelte';
@@ -40,6 +42,7 @@
 
 {#if show}
 	<div
+		transition:slide={{ duration: 200, easing: easeOut }}
 		class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-500/25 dark:bg-amber-500/10"
 	>
 		<ShieldAlert class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />

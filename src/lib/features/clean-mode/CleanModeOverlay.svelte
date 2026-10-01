@@ -2,11 +2,15 @@
 	import { KeyboardOff, ShieldAlert, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import KeyboardMap from './KeyboardMap.svelte';
+	import { fade } from 'svelte/transition';
+	import { easeOut, pop } from '$lib/utils/motion';
 	import { cleanMode } from '$lib/stores/cleanMode.svelte';
 </script>
 
 {#if cleanMode.active}
 	<div
+		in:fade={{ duration: 200, easing: easeOut }}
+		out:fade={{ duration: 150, easing: easeOut }}
 		class="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 overflow-y-auto bg-[#0a0916] px-6 py-10 text-center"
 		style="background-image: radial-gradient(120% 70% at 50% -10%, rgb(124 92 252 / 0.22), transparent 60%);"
 	>
@@ -31,6 +35,7 @@
 		<div class="flex flex-col items-center gap-3">
 			{#if cleanMode.error}
 				<p
+					in:pop={{ start: 0.97, y: 4, duration: 200 }}
 					class="flex max-w-md items-center gap-2 text-balance rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
 				>
 					<TriangleAlert class="h-4 w-4 shrink-0" />
@@ -47,7 +52,7 @@
 				Exit Clean Mode
 			</Button>
 			<p class="flex items-center gap-1.5 text-xs text-white/40">
-				<ShieldAlert class="h-3.5 w-3.5" /> Click above — keyboard shortcuts won't work here.
+				<ShieldAlert class="h-3.5 w-3.5" /> Click above to exit Cleanup Mode.
 			</p>
 		</div>
 	</div>

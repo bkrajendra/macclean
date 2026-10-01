@@ -42,35 +42,39 @@
 	});
 </script>
 
-<div class="animate-fade-in space-y-7">
+<div class="flex h-full min-h-0 animate-screen-in flex-col">
 	<StepHeading
 		title="Cleaning your Mac"
 		subtitle="Removing the items you selected — please don't quit MacClean."
 	/>
 
-	<OrbitField items={orbitItems}>
-		{#snippet ring()}
-			<CircularProgress size={240} progress={fraction} tone="magenta">
-				<div class="flex flex-col items-center">
-					<Sparkles class="mb-1 h-7 w-7 text-brand-2" />
-					<p class="font-display text-xl font-extrabold text-ink">Cleaning…</p>
-					<p class="text-xs text-muted">Removing unnecessary files</p>
-					<p class="mt-1 font-display text-3xl font-extrabold text-gradient-brand">
-						{formatPercent(fraction)}
-					</p>
-				</div>
-			</CircularProgress>
-		{/snippet}
-	</OrbitField>
+	<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
+		<div class="my-auto flex flex-col items-center gap-7 py-4">
+			<OrbitField items={orbitItems}>
+				{#snippet ring()}
+					<CircularProgress size={240} progress={fraction} tone="magenta">
+						<div class="flex flex-col items-center">
+							<Sparkles class="mb-1 h-7 w-7 text-brand-2" />
+							<p class="font-display text-xl font-extrabold text-ink">Cleaning…</p>
+							<p class="text-xs text-muted">Removing unnecessary files</p>
+							<p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-gradient-brand">
+								{formatPercent(fraction)}
+							</p>
+						</div>
+					</CircularProgress>
+				{/snippet}
+			</OrbitField>
 
-	<div
-		class="mx-auto flex max-w-md items-center justify-center gap-2 rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-muted"
-	>
-		<ShieldCheck class="h-4 w-4 text-emerald-500" />
-		MacClean is removing only the items you selected.
+			<div
+				class="mx-auto flex max-w-md items-center justify-center gap-2 rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-muted"
+			>
+				<ShieldCheck class="h-4 w-4 text-emerald-500" />
+				MacClean is removing only the items you selected.
+			</div>
+		</div>
 	</div>
 
-	<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+	<div class="grid shrink-0 gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-4">
 		<StatTile
 			icon={FileMinus}
 			label="Items processed"

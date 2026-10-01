@@ -30,7 +30,7 @@
 	</span>
 	<div class="min-w-0">
 		<p class="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-faint">{label}</p>
-		<p class="mt-0.5 truncate font-display text-xl font-bold text-ink">{value}</p>
+		<p class="mt-0.5 truncate font-display text-xl font-bold tabular-nums text-ink">{value}</p>
 		{#if hint}<p class="truncate text-xs text-muted">{hint}</p>{/if}
 	</div>
 </article>

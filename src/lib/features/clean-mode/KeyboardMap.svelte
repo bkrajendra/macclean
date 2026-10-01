@@ -110,10 +110,10 @@
 		<div class="flex gap-1.5">
 			{#each cols as key (key.id)}
 				<div
-					class="flex h-9 items-center justify-center rounded-md border text-[0.65rem] font-medium uppercase tracking-wide transition-all duration-150 sm:h-11 sm:text-xs {activeKey ===
+					class="flex h-9 items-center justify-center rounded-md border text-[0.65rem] font-medium uppercase tracking-wide transition-[transform,background-color,border-color,color,box-shadow] sm:h-11 sm:text-xs {activeKey ===
 					key.id
-						? 'scale-95 border-brand-2/70 bg-brand-2/80 text-white shadow-[0_0_16px_2px_rgb(168_85_247/0.55)]'
-						: 'border-white/10 bg-white/[0.05] text-white/50'}"
+						? 'scale-95 border-brand-2/70 bg-brand-2/80 text-white shadow-[0_0_16px_2px_rgb(168_85_247/0.55)] duration-[40ms]'
+						: 'border-white/10 bg-white/[0.05] text-white/50 duration-300'}"
 					style="flex: {key.flex ?? 1}"
 				>
 					{key.label}

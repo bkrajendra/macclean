@@ -22,15 +22,23 @@
 			type="button"
 			onclick={() => pick('all')}
 			class={cn(
-				'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition',
-				active === 'all'
-					? 'gradient-brand font-semibold text-white shadow-tile'
-					: 'text-ink hover:bg-surface-3'
+				'relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition',
+				active === 'all' ? 'font-semibold text-white' : 'text-ink hover:bg-surface-3'
 			)}
 		>
-			<LayoutGrid class="h-4 w-4 shrink-0" />
-			<span class="flex-1 text-left">All items</span>
-			<span class={cn('text-xs tabular-nums', active === 'all' ? 'text-white/80' : 'text-faint')}>
+			<span
+				class="gradient-brand absolute inset-0 rounded-xl shadow-tile transition-opacity duration-200"
+				class:opacity-0={active !== 'all'}
+				aria-hidden="true"
+			></span>
+			<LayoutGrid class="relative h-4 w-4 shrink-0" />
+			<span class="relative flex-1 text-left">All items</span>
+			<span
+				class={cn(
+					'relative text-xs tabular-nums',
+					active === 'all' ? 'text-white/80' : 'text-faint'
+				)}
+			>
 				{formatCount(scan.totalCount)}
 			</span>
 		</button>
@@ -42,13 +50,18 @@
 				type="button"
 				onclick={() => pick(bucket.key)}
 				class={cn(
-					'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition',
-					on ? 'gradient-brand font-semibold text-white shadow-tile' : 'text-ink hover:bg-surface-3'
+					'relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition',
+					on ? 'font-semibold text-white' : 'text-ink hover:bg-surface-3'
 				)}
 			>
-				<Icon class="h-4 w-4 shrink-0" />
-				<span class="flex-1 truncate text-left">{bucket.key}</span>
-				<span class={cn('text-xs tabular-nums', on ? 'text-white/80' : 'text-faint')}>
+				<span
+					class="gradient-brand absolute inset-0 rounded-xl shadow-tile transition-opacity duration-200"
+					class:opacity-0={!on}
+					aria-hidden="true"
+				></span>
+				<Icon class="relative h-4 w-4 shrink-0" />
+				<span class="relative flex-1 truncate text-left">{bucket.key}</span>
+				<span class={cn('relative text-xs tabular-nums', on ? 'text-white/80' : 'text-faint')}>
 					{formatCount(bucket.count)}
 				</span>
 			</button>

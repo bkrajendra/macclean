@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { ArrowLeft, CircleCheck, RotateCw, Sparkles } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import CircularProgress from '$lib/components/CircularProgress.svelte';
@@ -7,6 +8,13 @@
 	import { scan } from '$lib/stores/scan.svelte';
 
 	const result = $derived(scan.cleanupResult);
+
+	// Ring starts empty and draws to full on arrival (the arc has a stroke-dasharray transition).
+	let ringFull = $state(false);
+	onMount(() => {
+		const raf = requestAnimationFrame(() => (ringFull = true));
+		return () => cancelAnimationFrame(raf);
+	});
 
 	// animated count-up of reclaimed bytes
 	let shown = $state(0);
@@ -52,57 +60,65 @@
 	});
 </script>
 
-<div class="flex animate-scale-in flex-col items-center gap-6 py-4 text-center">
-	<CircularProgress size={220} progress={1}>
-		<div class="flex flex-col items-center">
-			<CircleCheck class="mb-1 h-9 w-9 text-emerald-500" />
-			<p class="font-display text-xl font-extrabold text-ink">All clean!</p>
-			<p class="mt-1 font-display text-3xl font-extrabold text-gradient-brand">
-				{formatBytes(shown)}
-			</p>
-			<p class="text-xs text-muted">
-				reclaimed across {formatCount(result?.deletedCount ?? 0)} item{(result?.deletedCount ??
-					0) === 1
-					? ''
-					: 's'}
-			</p>
-		</div>
-	</CircularProgress>
+<div class="flex h-full min-h-0 animate-screen-in flex-col overflow-y-auto text-center">
+	<div class="my-auto flex flex-col items-center gap-6 py-4">
+		<CircularProgress size={220} progress={ringFull ? 1 : 0}>
+			<div class="flex flex-col items-center">
+				<CircleCheck class="mb-1 h-9 w-9 animate-pop-in text-emerald-500 [animation-delay:200ms]" />
+				<p class="font-display text-xl font-extrabold text-ink">All clean!</p>
+				<p class="mt-1 font-display text-3xl font-extrabold text-gradient-brand">
+					{formatBytes(shown)}
+				</p>
+				<p class="text-xs text-muted">
+					reclaimed across {formatCount(result?.deletedCount ?? 0)} item{(result?.deletedCount ??
+						0) === 1
+						? ''
+						: 's'}
+				</p>
+			</div>
+		</CircularProgress>
 
-	<div class="card w-full max-w-md divide-y divide-line text-sm">
-		{#each LINES as line (line.key)}
-			{@const n = counts.get(line.key) ?? 0}
-			{#if n > 0}
-				<div class="flex items-center justify-between px-4 py-2.5">
-					<span class={line.tone}>{line.label}</span>
-					<span class="font-semibold tabular-nums text-ink">{formatCount(n)}</span>
-				</div>
-			{/if}
-		{/each}
-		<div class="flex items-center justify-between px-4 py-2.5">
-			<span class="font-semibold text-ink">Space reclaimed</span>
-			<span class="font-semibold tabular-nums text-ink">
-				{formatBytesCompact(result?.deletedBytes ?? 0)}
-			</span>
+		<div
+			class="card w-full max-w-md animate-screen-in divide-y divide-line text-sm [animation-delay:120ms] [animation-fill-mode:backwards]"
+		>
+			{#each LINES as line (line.key)}
+				{@const n = counts.get(line.key) ?? 0}
+				{#if n > 0}
+					<div class="flex items-center justify-between px-4 py-2.5">
+						<span class={line.tone}>{line.label}</span>
+						<span class="font-semibold tabular-nums text-ink">{formatCount(n)}</span>
+					</div>
+				{/if}
+			{/each}
+			<div class="flex items-center justify-between px-4 py-2.5">
+				<span class="font-semibold text-ink">Space reclaimed</span>
+				<span class="font-semibold tabular-nums text-ink">
+					{formatBytesCompact(result?.deletedBytes ?? 0)}
+				</span>
+			</div>
 		</div>
-	</div>
 
-	{#if (result?.failedCount ?? 0) > 0}
-		<p class="max-w-md text-xs text-muted">
-			Some items couldn't be removed (permission denied or in use). Granting Full Disk Access and
-			re-scanning usually resolves this.
+		{#if (result?.failedCount ?? 0) > 0}
+			<p class="max-w-md text-xs text-muted">
+				Some items couldn't be removed (permission denied or in use). Granting Full Disk Access and
+				re-scanning usually resolves this.
+			</p>
+		{/if}
+
+		<div
+			class="flex animate-screen-in gap-3 [animation-delay:180ms] [animation-fill-mode:backwards]"
+		>
+			<Button variant="ghost" onclick={() => scan.backToResults()}>
+				<ArrowLeft class="h-4 w-4" /> Back to results
+			</Button>
+			<Button onclick={() => scan.reset()}>
+				<RotateCw class="h-4 w-4" /> New scan
+			</Button>
+		</div>
+		<p
+			class="flex animate-screen-in items-center gap-1.5 text-xs text-faint [animation-delay:240ms] [animation-fill-mode:backwards]"
+		>
+			<Sparkles class="h-3.5 w-3.5" /> Tip: run a scan monthly to keep build caches in check.
 		</p>
-	{/if}
-
-	<div class="flex gap-3">
-		<Button variant="ghost" onclick={() => scan.backToResults()}>
-			<ArrowLeft class="h-4 w-4" /> Back to results
-		</Button>
-		<Button onclick={() => scan.reset()}>
-			<RotateCw class="h-4 w-4" /> New scan
-		</Button>
 	</div>
-	<p class="flex items-center gap-1.5 text-xs text-faint">
-		<Sparkles class="h-3.5 w-3.5" /> Tip: run a scan monthly to keep build caches in check.
-	</p>
 </div>

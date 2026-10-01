@@ -24,7 +24,7 @@
 	} & HTMLButtonAttributes = $props();
 
 	const base =
-		'no-drag relative inline-flex select-none items-center justify-center gap-2 rounded-full font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-2';
+		'no-drag relative inline-flex select-none items-center justify-center gap-2 rounded-full font-semibold transition duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-2';
 
 	const sizes: Record<Size, string> = {
 		sm: 'h-8 px-3.5 text-[0.8rem]',
@@ -47,12 +47,20 @@
 	{type}
 	class={cn(base, sizes[size], variants[variant], klass)}
 	disabled={loading || rest.disabled}
+	aria-busy={loading}
 >
-	{#if loading}
-		<span
-			class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-			aria-hidden="true"
+	<span
+		class="inline-flex items-center justify-center gap-2 transition-opacity duration-150"
+		class:opacity-0={loading}
+	>
+		{@render children()}
+	</span>
+	<span
+		class="absolute inset-0 grid place-items-center transition-opacity duration-150"
+		class:opacity-0={!loading}
+		aria-hidden="true"
+	>
+		<span class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
 		></span>
-	{/if}
-	{@render children()}
+	</span>
 </button>
